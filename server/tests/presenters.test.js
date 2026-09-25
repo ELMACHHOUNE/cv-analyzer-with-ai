@@ -54,7 +54,7 @@ function analysisFixture(overrides = {}) {
     strengths: [{ title: 'Reliability work', explanation: 'Improved reliability by 35%.', evidence: ['35%'] }],
     improvements: [{ title: 'Add metrics', explanation: 'Some bullets lack numbers.', evidence: [], priority: 'medium' }],
     recommendations: ['Quantify more outcomes'],
-    model: 'grok-4.6',
+    model: 'openai/gpt-oss-120b',
     promptVersion: 'v1',
     disclaimer: 'Educational estimate only.',
     createdAt: '2026-01-01T00:00:00.000Z',

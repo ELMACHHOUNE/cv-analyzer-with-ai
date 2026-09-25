@@ -5,7 +5,7 @@ import { AppError } from '../utils/AppError.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 import { presentAnalysis } from '../utils/presenters.js';
 import { analyzeResume, generateRecommendations, improveResume } from '../services/aiService.js';
-import { calculateResumeScore, scoreCategoryMap } from '../utils/scoreCalculator.js';
+import { calculateResumeScore, RESUME_SCORE_DISCLAIMER, scoreCategoryMap } from '../utils/scoreCalculator.js';
 
 function uniqueIds(values) {
   return [...new Set(values.filter(Boolean).map((value) => String(value)))];
@@ -42,7 +42,8 @@ export const create = asyncHandler(async (req, res) => {
     improvements: aiResult.improvements,
     recommendations: aiResult.recommendations,
     model: aiResult.model,
-    promptVersion: aiResult.promptVersion
+    promptVersion: aiResult.promptVersion,
+    disclaimer: RESUME_SCORE_DISCLAIMER
   });
   await Resume.updateOne(
     { _id: resume._id, user: req.user._id },

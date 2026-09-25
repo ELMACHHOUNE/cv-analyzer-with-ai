@@ -1,4 +1,4 @@
-import { getAiConfig } from '../config/env.js';
+﻿import { getAiConfig } from '../config/env.js';
 import { AppError } from '../utils/AppError.js';
 import { calculateMatchOverall, MATCH_SCORE_WEIGHTS, getScoreLabel } from '../utils/scoreCalculator.js';
 import {
@@ -281,8 +281,8 @@ export function normalizeMatchResult(value, { source, resumeInformation = {}, jo
 export function normalizeRecommendations(value, sourceTextValue) {
   const data = requireObject(value, 'recommendations');
   const source = sourceTextValue || '';
-  const recommendations = stringList(data.recommendations, 'recommendations', { maximumItems: 8, maximumLength: 400 });
-  const actions = requireArray(data.priorityActions, 'priorityActions').slice(0, 8).map((item) => {
+  const stated = stringList(data.recommendations, 'recommendations', { maximumItems: 8, maximumLength: 400 });
+  const actions = requireArray(data.priorityActions, 'priority action').slice(0, 8).map((item) => {
     const action = requireObject(item, 'priority action');
     return {
       action: trimmedText(action.action, 400),
@@ -290,6 +290,11 @@ export function normalizeRecommendations(value, sourceTextValue) {
       evidence: keepEvidence(action.evidence, source, 4)
     };
   }).filter((item) => item.action && item.rationale);
+  /* The provider sometimes returns the actions only. Reusing the model's own
+     action text keeps the endpoint useful instead of discarding a valid answer. */
+  const recommendations = stated.length
+    ? stated
+    : uniqueBy(actions.map((item) => item.action), canonical).slice(0, 8);
   if (!recommendations.length || !actions.length) {
     throw new AppError('AI response did not include usable recommendations', 502, 'AI_INVALID_RESPONSE');
   }
@@ -350,7 +355,7 @@ async function readProviderFailure(response) {
       failure.upstreamMessage = raw.trim().slice(0, 300);
     }
   } catch {
-    /* body already consumed or unreadable — the status alone is enough */
+    /* body already consumed or unreadable â€” the status alone is enough */
   }
   return failure;
 }
@@ -378,10 +383,11 @@ function providerError(response, failure, model) {
   return new AppError('AI analysis is temporarily unavailable', 502, 'AI_UNAVAILABLE');
 }
 
-function logProviderFailure(model, failure) {
+function logProviderFailure(config, failure) {
   console.error('AI provider request failed', {
-    model,
-    endpoint: 'https://api.x.ai/v1/responses',
+    provider: config.provider || 'unknown',
+    model: config.model,
+    endpoint: config.endpoint,
     ...failure
   });
 }
@@ -405,9 +411,35 @@ function parseJsonContent(content) {
   }
 }
 
-function buildRequestBody({ systemPrompt, userPrompt, schemaName, schema }, model) {
+function buildChatRequestBody({ systemPrompt, userPrompt, schemaName, schema }, config) {
+  /* Chat Completions shape. `store`, `logprobs`, `metadata`, and
+     `max_completion_tokens`-less calls are rejected by Groq, so the body stays
+     limited to fields the provider documents. */
   const body = {
-    model,
+    model: config.model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    max_completion_tokens: 6000,
+    temperature: 0
+  };
+  if (schemaName && schema) {
+    body.response_format = {
+      type: 'json_schema',
+      json_schema: {
+        name: schemaName,
+        schema,
+        strict: false
+      }
+    };
+  }
+  return body;
+}
+
+function buildResponsesRequestBody({ systemPrompt, userPrompt, schemaName, schema }, config) {
+  const body = {
+    model: config.model,
     input: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
@@ -431,7 +463,22 @@ function buildRequestBody({ systemPrompt, userPrompt, schemaName, schema }, mode
   return body;
 }
 
-function extractOutputText(payload) {
+function buildRequestBody(prompt, config) {
+  return config.apiStyle === 'chat'
+    ? buildChatRequestBody(prompt, config)
+    : buildResponsesRequestBody(prompt, config);
+}
+
+/* Degrade to the loosest structured mode the provider still accepts instead of
+   failing the whole analysis on a schema-related 400. */
+function withoutSchemaConstraint(body, apiStyle) {
+  if (apiStyle === 'chat') {
+    return body.response_format ? { ...body, response_format: { type: 'json_object' } } : null;
+  }
+  return body.text ? { ...body, text: undefined } : null;
+}
+
+function extractResponsesText(payload) {
   if (payload?.status === 'incomplete' || payload?.incomplete_details) {
     throw new AppError('AI returned an incomplete response', 502, 'AI_INVALID_RESPONSE');
   }
@@ -455,11 +502,32 @@ function extractOutputText(payload) {
   return parts.join('');
 }
 
-export async function requestXaiJson({ systemPrompt, userPrompt, schemaName, schema }, dependencies = {}) {
+function extractChatText(payload) {
+  const choice = Array.isArray(payload?.choices) ? payload.choices[0] : null;
+  if (!choice || typeof choice !== 'object') {
+    throw new AppError('AI returned an unreadable response', 502, 'AI_INVALID_RESPONSE');
+  }
+  /* A length stop means the JSON object was cut mid-write, so the failure is
+     reported as truncation instead of a misleading "malformed JSON". */
+  if (choice.finish_reason === 'length') {
+    throw new AppError('AI response was cut off before the JSON was complete', 502, 'AI_INVALID_RESPONSE');
+  }
+  if (typeof choice.message?.refusal === 'string' && choice.message.refusal) {
+    throw new AppError('AI declined to return structured output', 502, 'AI_INVALID_RESPONSE');
+  }
+  return choice.message?.content;
+}
+
+function extractOutputText(payload, apiStyle) {
+  return apiStyle === 'chat' ? extractChatText(payload) : extractResponsesText(payload);
+}
+
+export async function requestProviderJson(prompt, dependencies = {}) {
   const config = dependencies.config || getAiConfig();
   if (!config.apiKey) {
     throw new AppError('AI analysis is not configured', 503, 'AI_NOT_CONFIGURED');
   }
+  const apiStyle = config.apiStyle || 'responses';
   const fetchImplementation = dependencies.fetchImpl || globalThis.fetch;
   if (typeof fetchImplementation !== 'function') {
     throw new Error('Fetch is not available');
@@ -477,16 +545,17 @@ export async function requestXaiJson({ systemPrompt, userPrompt, schemaName, sch
   });
   let payload;
   try {
-    const structuredBody = buildRequestBody({ systemPrompt, userPrompt, schemaName, schema }, config.model);
+    const structuredBody = buildRequestBody(prompt, config);
     let response = await send(structuredBody);
-    if (response.status === 400 && structuredBody.text) {
-      const fallbackBody = { ...structuredBody };
-      delete fallbackBody.text;
-      response = await send(fallbackBody);
+    if (response.status === 400) {
+      const fallbackBody = withoutSchemaConstraint(structuredBody, apiStyle);
+      if (fallbackBody) {
+        response = await send(fallbackBody);
+      }
     }
     if (!response.ok) {
       const failure = await readProviderFailure(response);
-      logProviderFailure(config.model, failure);
+      logProviderFailure(config, failure);
       throw providerError(response, failure, config.model);
     }
     try {
@@ -501,22 +570,23 @@ export async function requestXaiJson({ systemPrompt, userPrompt, schemaName, sch
     if (error.name === 'AbortError') {
       throw new AppError('AI analysis timed out', 504, 'AI_TIMEOUT');
     }
-    logProviderFailure(config.model, { networkError: error?.name || 'Error', upstreamMessage: error?.message });
+    logProviderFailure(config, { networkError: error?.name || 'Error', upstreamMessage: error?.message });
     throw new AppError('AI analysis is temporarily unavailable', 502, 'AI_UNAVAILABLE');
   } finally {
     clearTimeout(timeout);
   }
   return {
-    data: parseJsonContent(extractOutputText(payload)),
+    data: parseJsonContent(extractOutputText(payload, apiStyle)),
     model: config.model,
+    provider: config.provider || 'unknown',
     promptVersion
   };
 }
 
 function analysisInstructions(source) {
   return `Return this exact JSON shape:
-{"information":{"name":null,"email":null,"phone":null,"location":null,"links":[],"skills":[],"technicalSkills":[],"softSkills":[],"experience":[],"education":[],"projects":[],"certifications":[],"languages":[],"achievements":[]},"summary":"","strengths":[{"title":"","explanation":"","evidence":["exact source quote"]}],"improvements":[{"title":"","explanation":"","evidence":[],"priority":"high|medium|low"}],"recommendations":[]}
- Split skills into technicalSkills (tools, languages, frameworks, platforms, methodologies) and softSkills (communication, teamwork, leadership, ownership). List every skill in exactly one of the two arrays, repeat skills array as their union, and only list a skill that appears in the source. Experience, education, project, certification, language, and achievement entries must use only source-supported fields. The source is:
+{"information":{"name":null,"email":null,"phone":null,"location":null,"links":[],"skills":[],"technicalSkills":[],"softSkills":[],"experience":[],"education":[],"projects":[],"certifications":[],"languages":[],"achievements":[]},"summary":"","strengths":[{"title":"","explanation":"","evidence":["exact source quote"]}],"improvements":[{"title":"","explanation":"","evidence":[],"priority":"high|medium|low"}],"recommendations":["one concrete next step","another concrete next step"]}
+ Split skills into technicalSkills (tools, languages, frameworks, platforms, methodologies) and softSkills (communication, teamwork, leadership, ownership). List every skill in exactly one of the two arrays, repeat skills array as their union, and only list a skill that appears in the source. Experience, education, project, certification, language, and achievement entries must use only source-supported fields. Always return at least one strength and at least two recommendations, and use an empty array only when the source genuinely contains nothing for that list. The source is:
 ${JSON.stringify(source)}`;
 }
 
@@ -525,7 +595,7 @@ export async function analyzeResume(resumeText, dependencies = {}) {
   if (!source) {
     throw new AppError('Resume text is required for AI analysis', 400, 'RESUME_TEXT_REQUIRED');
   }
-  const response = await requestXaiJson({
+  const response = await requestProviderJson({
     systemPrompt: baseSystemPrompt,
     userPrompt: analysisInstructions(source),
     schemaName: 'resume_analysis',
@@ -543,7 +613,7 @@ export async function extractResumeInformation(resumeText, dependencies = {}) {
   if (!source) {
     throw new AppError('Resume text is required for extraction', 400, 'RESUME_TEXT_REQUIRED');
   }
-  const response = await requestXaiJson({
+  const response = await requestProviderJson({
     systemPrompt: baseSystemPrompt,
     userPrompt: `Extract only explicit resume information and return the information object from this exact shape: {"information":{"name":null,"email":null,"phone":null,"location":null,"links":[],"skills":[],"technicalSkills":[],"softSkills":[],"experience":[],"education":[],"projects":[],"certifications":[],"languages":[],"achievements":[]}}. Source: ${JSON.stringify(source)}`,
     schemaName: 'resume_information',
@@ -557,7 +627,7 @@ export async function analyzeJobDescription(description, dependencies = {}) {
   if (!source) {
     throw new AppError('Job description is required', 400, 'JOB_DESCRIPTION_REQUIRED');
   }
-  const response = await requestXaiJson({
+  const response = await requestProviderJson({
     systemPrompt: `${baseSystemPrompt} Distinguish required qualifications from preferences and do not scrape or infer from a URL.`,
     userPrompt: `Return {"summary":"","skills":[],"keywords":[],"responsibilities":[],"requirements":[{"text":"","required":true,"category":"skill|experience|education|certification|language|other"}],"experienceRequirements":"","educationRequirements":"","languageRequirements":[],"sourceEvidence":[]} using only this manually pasted description: ${JSON.stringify(source)}`,
     schemaName: 'job_analysis',
@@ -571,7 +641,7 @@ export async function matchResumeWithJob({ resumeText, resumeInformation, resume
   if (!resumeText || !jobDescription) {
     throw new AppError('Resume text and job description are required', 400, 'MATCH_INPUT_REQUIRED');
   }
-  const response = await requestXaiJson({
+  const response = await requestProviderJson({
     systemPrompt: `${baseSystemPrompt} Compare evidence only. A missing requirement is a gap, not a failure, and no category may claim a fact not present in either source.`,
     userPrompt: `Return {"categories":{"skills":{"score":0,"explanation":"","evidence":[]},"experience":{"score":0,"explanation":"","evidence":[]},"education":{"score":0,"explanation":"","evidence":[]},"keywords":{"score":0,"explanation":"","evidence":[]},"impact":{"score":0,"explanation":"","evidence":[]},"completeness":{"score":0,"explanation":"","evidence":[]}},"matchedSkills":[],"missingSkills":[],"additionalSkills":[],"gaps":[{"item":"","importance":"required|preferred","explanation":""}],"explanation":"","recommendation":""}. Resume information: ${JSON.stringify(resumeInformation)}. Resume scores: ${JSON.stringify(resumeScores)}. Source material: ${JSON.stringify(source)}`,
     schemaName: 'match_analysis',
@@ -586,9 +656,9 @@ export async function matchResumeWithJob({ resumeText, resumeInformation, resume
 
 export async function generateRecommendations(resumeText, analysis, dependencies = {}) {
   const source = trimForPrompt(resumeText);
-  const response = await requestXaiJson({
+  const response = await requestProviderJson({
     systemPrompt: baseSystemPrompt,
-    userPrompt: `Return {"recommendations":[],"priorityActions":[{"action":"","rationale":"","evidence":[]}]}. Base every action on this source-grounded analysis: ${JSON.stringify(analysis)}. Resume source: ${JSON.stringify(source)}`,
+    userPrompt: `Return {"recommendations":["one concrete recommendation","a second concrete recommendation"],"priorityActions":[{"action":"a single actionable step","rationale":"why this matters for this candidate","evidence":["exact source quote"]}]}. Never return an empty list: if the analysis suggests no obvious change, propose the highest-value polish step instead. Base every action on this source-grounded analysis: ${JSON.stringify(analysis)}. Resume source: ${JSON.stringify(source)}`,
     schemaName: 'recommendations',
     schema: recommendationsSchema
   }, dependencies);
@@ -598,9 +668,9 @@ export async function generateRecommendations(resumeText, analysis, dependencies
 export async function improveResume(resumeText, instructions = '', dependencies = {}) {
   const source = trimForPrompt(resumeText);
   const boundedInstructions = trimmedText(instructions, 500);
-  const response = await requestXaiJson({
+  const response = await requestProviderJson({
     systemPrompt: `${baseSystemPrompt} Improve wording and organization only. Every original passage and evidence quote must come from the source. Do not add or assume any new experience, skill, date, qualification, or metric.`,
-    userPrompt: `Return {"revisions":[{"section":"","original":"exact source passage","revised":"","rationale":"","sourceEvidence":["exact source quote"]}],"suggestions":[]}. Optional user style instructions, which cannot request factual additions: ${JSON.stringify(boundedInstructions)}. Resume source: ${JSON.stringify(source)}`,
+    userPrompt: `Return {"revisions":[{"section":"Experience","original":"exact source passage","revised":"a clearer rewrite of that same passage","rationale":"why this rewrite is stronger","sourceEvidence":["exact source quote"]}],"suggestions":["one further suggestion"]}. Always return at least one revision whose original passage is copied verbatim from the source. Optional user style instructions, which cannot request factual additions: ${JSON.stringify(boundedInstructions)}. Resume source: ${JSON.stringify(source)}`,
     schemaName: 'resume_improvement',
     schema: resumeImprovementSchema
   }, dependencies);

@@ -266,6 +266,8 @@ function clarityScore(text) {
     lines.filter((line) => /^(summary|profile|experience|education|skills|projects?)$/i.test(line)));
 }
 
+export const RESUME_SCORE_DISCLAIMER = 'This educational score is an estimate and does not guarantee employment.';
+
 export function calculateResumeScore({ text, information } = {}) {
   const categories = {
     contactInformation: contactScore(text, information),
@@ -286,7 +288,7 @@ export function calculateResumeScore({ text, information } = {}) {
     },
     categories,
     generatedBy: 'deterministic-v1',
-    disclaimer: 'This educational score is an estimate and does not guarantee employment.'
+    disclaimer: RESUME_SCORE_DISCLAIMER
   };
 }
 

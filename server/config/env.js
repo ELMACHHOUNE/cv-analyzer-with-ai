@@ -105,18 +105,63 @@ function isProductionValue(nodeEnv) {
   return nodeEnv === 'production';
 }
 
-export function getAiConfig() {
-  const timeout = Number(process.env.XAI_TIMEOUT_MS || 90000);
-  if (!Number.isInteger(timeout) || timeout < 1000 || timeout > 120000) {
-    throw new Error('XAI_TIMEOUT_MS must be an integer between 1000 and 120000');
+/*
+  The analysis pipeline talks to an OpenAI-compatible chat API. Each supported
+  provider only differs by endpoint, default model, and request style, so the
+  provider is chosen with AI_PROVIDER and every setting can be overridden with
+  either a provider specific variable (GROQ_ or XAI_ prefixed) or the generic
+  AI_ prefixed one.
+*/
+const aiProviders = {
+  groq: {
+    apiStyle: 'chat',
+    defaultEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    defaultModel: 'openai/gpt-oss-120b',
+    keys: ['GROQ_API_KEY', 'AI_API_KEY'],
+    models: ['GROQ_MODEL', 'AI_MODEL'],
+    endpoints: ['GROQ_ENDPOINT', 'AI_ENDPOINT'],
+    timeouts: ['GROQ_TIMEOUT_MS', 'AI_TIMEOUT_MS']
+  },
+  xai: {
+    apiStyle: 'responses',
+    defaultEndpoint: 'https://api.x.ai/v1/responses',
+    defaultModel: 'grok-4.6',
+    keys: ['XAI_API_KEY', 'AI_API_KEY'],
+    models: ['XAI_MODEL', 'AI_MODEL'],
+    endpoints: ['XAI_ENDPOINT', 'AI_ENDPOINT'],
+    timeouts: ['XAI_TIMEOUT_MS', 'AI_TIMEOUT_MS']
   }
-  const endpoint = process.env.XAI_ENDPOINT?.trim() || 'https://api.x.ai/v1/responses';
+};
+
+function firstEnvValue(names) {
+  for (const name of names) {
+    const value = process.env[name]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+
+export function getAiConfig() {
+  const provider = (process.env.AI_PROVIDER?.trim() || 'xai').toLowerCase();
+  const preset = aiProviders[provider];
+  if (!preset) {
+    throw new Error(`AI_PROVIDER must be one of: ${Object.keys(aiProviders).join(', ')}`);
+  }
+  const timeout = Number(firstEnvValue(preset.timeouts) || 90000);
+  if (!Number.isInteger(timeout) || timeout < 1000 || timeout > 120000) {
+    throw new Error('AI_TIMEOUT_MS must be an integer between 1000 and 120000');
+  }
+  const endpoint = firstEnvValue(preset.endpoints) || preset.defaultEndpoint;
   if (!/^https:\/\/[a-z0-9.-]+(?:\/[a-z0-9/_-]*)?$/i.test(endpoint)) {
-    throw new Error('XAI_ENDPOINT must be an https URL');
+    throw new Error('AI_ENDPOINT must be an https URL');
   }
   return Object.freeze({
-    apiKey: process.env.XAI_API_KEY?.trim() || null,
-    model: process.env.XAI_MODEL?.trim() || 'grok-4.6',
+    provider,
+    apiStyle: preset.apiStyle,
+    apiKey: firstEnvValue(preset.keys),
+    model: firstEnvValue(preset.models) || preset.defaultModel,
     timeoutMs: timeout,
     endpoint
   });

@@ -1,5 +1,8 @@
 const nullableString = { type: ['string', 'null'] };
 const stringList = { type: 'array', items: { type: 'string' } };
+/* An empty array satisfies a plain array schema, so every list the normalizers
+   treat as mandatory uses this variant to state the intent to the provider. */
+const requiredStringList = { type: 'array', minItems: 1, items: { type: 'string' } };
 
 function object(properties, required) {
   return {
@@ -116,9 +119,10 @@ export const matchAnalysisSchema = object({
 });
 
 export const recommendationsSchema = object({
-  recommendations: stringList,
+  recommendations: requiredStringList,
   priorityActions: {
     type: 'array',
+    minItems: 1,
     items: object({
       action: { type: 'string' },
       rationale: { type: 'string' },
@@ -130,12 +134,13 @@ export const recommendationsSchema = object({
 export const resumeImprovementSchema = object({
   revisions: {
     type: 'array',
+    minItems: 1,
     items: object({
       section: { type: 'string' },
       original: { type: 'string' },
       revised: { type: 'string' },
       rationale: { type: 'string' },
-      sourceEvidence: stringList
+      sourceEvidence: requiredStringList
     })
   },
   suggestions: stringList

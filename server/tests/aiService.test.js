@@ -1,13 +1,25 @@
-import { describe, expect, it, vi } from 'vitest';
-import { analyzeResume, requestXaiJson } from '../services/aiService.js';
+﻿import { describe, expect, it, vi } from 'vitest';
+import { analyzeResume, requestProviderJson } from '../services/aiService.js';
 
 const responsesEndpoint = 'https://api.x.ai/v1/responses';
+const chatEndpoint = 'https://api.groq.com/openai/v1/chat/completions';
 
 const testConfig = {
+  provider: 'xai',
+  apiStyle: 'responses',
   apiKey: null,
   model: 'test-model',
   timeoutMs: 1000,
   endpoint: responsesEndpoint
+};
+
+const chatConfig = {
+  provider: 'groq',
+  apiStyle: 'chat',
+  apiKey: 'test-placeholder',
+  model: 'test-model',
+  timeoutMs: 1000,
+  endpoint: chatEndpoint
 };
 
 function jsonResponse(payload, overrides = {}) {
@@ -29,6 +41,13 @@ function outputPayload(text) {
   };
 }
 
+function chatPayload(content, overrides = {}) {
+  return {
+    choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content } }],
+    ...overrides
+  };
+}
+
 function configured(overrides = {}) {
   return { ...testConfig, apiKey: 'test-placeholder', ...overrides };
 }
@@ -42,7 +61,7 @@ function failureResponse(status, body) {
 }
 
 function runAgainst(failure) {
-  return requestXaiJson({
+  return requestProviderJson({
     systemPrompt: 'Return JSON only.',
     userPrompt: 'Return an object.',
     schemaName: 'unit_test',
@@ -75,7 +94,7 @@ describe('AI service safety', () => {
   });
 
   it('rejects malformed model JSON', async () => {    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(outputPayload('{malformed')));
-    await expect(requestXaiJson({
+    await expect(requestProviderJson({
       systemPrompt: 'Return JSON only.',
       userPrompt: 'Return an object.',
       schemaName: 'unit_test',
@@ -88,7 +107,7 @@ describe('AI service safety', () => {
 
   it('uses the Responses endpoint with documented fields only', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(outputPayload('{"ok":true}')));
-    await requestXaiJson({
+    await requestProviderJson({
       systemPrompt: 'Return JSON only.',
       userPrompt: 'Return an object.',
       schemaName: 'unit_test',
@@ -124,7 +143,7 @@ describe('AI service safety', () => {
         { type: 'message', content: [{ type: 'output_text', text: '1}' }] }
       ]
     }));
-    const result = await requestXaiJson({ systemPrompt: 's', userPrompt: 'u' }, {
+    const result = await requestProviderJson({ systemPrompt: 's', userPrompt: 'u' }, {
       config: configured(),
       fetchImpl
     });
@@ -137,7 +156,7 @@ describe('AI service safety', () => {
       .mockResolvedValueOnce(jsonResponse({ error: 'unsupported text.format' }, { ok: false, status: 400 }))
       .mockResolvedValueOnce(jsonResponse(outputPayload('{"ok":true}')));
 
-    const result = await requestXaiJson({
+    const result = await requestProviderJson({
       systemPrompt: 'Return JSON only.',
       userPrompt: 'Return an object.',
       schemaName: 'unit_test',
@@ -158,7 +177,7 @@ describe('AI service safety', () => {
     const fetchImpl = vi
       .fn()
       .mockResolvedValue(jsonResponse({ error: 'bad request' }, { ok: false, status: 400 }));
-    await expect(requestXaiJson({
+    await expect(requestProviderJson({
       systemPrompt: 's',
       userPrompt: 'u',
       schemaName: 'unit_test',
@@ -176,7 +195,7 @@ describe('AI service safety', () => {
       incomplete_details: { reason: 'max_output_tokens' },
       output: []
     }));
-    await expect(requestXaiJson({ systemPrompt: 's', userPrompt: 'u' }, {
+    await expect(requestProviderJson({ systemPrompt: 's', userPrompt: 'u' }, {
       config: configured(),
       fetchImpl
     })).rejects.toMatchObject({
@@ -189,7 +208,7 @@ describe('AI service safety', () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({
       output: [{ type: 'message', content: [{ type: 'refusal', refusal: 'I cannot help with that.' }] }]
     }));
-    await expect(requestXaiJson({ systemPrompt: 's', userPrompt: 'u' }, {
+    await expect(requestProviderJson({ systemPrompt: 's', userPrompt: 'u' }, {
       config: configured(),
       fetchImpl
     })).rejects.toMatchObject({
@@ -238,5 +257,127 @@ describe('AI service safety', () => {
     expect(result.information.softSkills).toEqual(['Leadership']);
     expect(result.information.technologies).toEqual(['Node.js']);
     expect(result.information.skills).toEqual(['Node.js', 'Leadership']);
+  });
+});
+
+describe('Groq chat completions provider', () => {
+  it('sends only fields the provider documents', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(chatPayload('{"ok":true}')));
+    await requestProviderJson({
+      systemPrompt: 'Return JSON only.',
+      userPrompt: 'Return an object.',
+      schemaName: 'unit_test',
+      schema: { type: 'object', properties: { ok: { type: 'boolean' } } }
+    }, { config: chatConfig, fetchImpl });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][0]).toBe(chatEndpoint);
+
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body.model).toBe('test-model');
+    expect(body.messages[0]).toEqual({ role: 'system', content: 'Return JSON only.' });
+    expect(body.messages[1]).toEqual({ role: 'user', content: 'Return an object.' });
+    expect(body.max_completion_tokens).toBe(6000);
+    expect(body.temperature).toBe(0);
+    expect(body.response_format.type).toBe('json_schema');
+    expect(body.response_format.json_schema.name).toBe('unit_test');
+    expect(body.response_format.json_schema.strict).toBe(false);
+    expect(body.response_format.json_schema.schema).toEqual({ type: 'object', properties: { ok: { type: 'boolean' } } });
+    expect(body.store).toBeUndefined();
+    expect(body.stream).toBeUndefined();
+    expect(body.max_tokens).toBeUndefined();
+    expect(body.input).toBeUndefined();
+    expect(body.text).toBeUndefined();
+  });
+
+  it('reads the assistant message content', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(chatPayload('{"a":1}')));
+    const result = await requestProviderJson({ systemPrompt: 's', userPrompt: 'u' }, {
+      config: chatConfig,
+      fetchImpl
+    });
+    expect(result.data).toEqual({ a: 1 });
+    expect(result.provider).toBe('groq');
+  });
+
+  it('reports a token-truncated answer as an invalid response', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({
+      choices: [{ finish_reason: 'length', message: { content: '{"summary":"Backend eng' } }]
+    }));
+    await expect(requestProviderJson({ systemPrompt: 's', userPrompt: 'u' }, {
+      config: chatConfig,
+      fetchImpl
+    })).rejects.toMatchObject({ statusCode: 502, code: 'AI_INVALID_RESPONSE' });
+  });
+
+  it('treats a refusal as an invalid response', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({
+      choices: [{ finish_reason: 'stop', message: { content: null, refusal: 'I cannot help with that.' } }]
+    }));
+    await expect(requestProviderJson({ systemPrompt: 's', userPrompt: 'u' }, {
+      config: chatConfig,
+      fetchImpl
+    })).rejects.toMatchObject({ statusCode: 502, code: 'AI_INVALID_RESPONSE' });
+  });
+
+  it('falls back to json_object mode after a schema 400', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ error: { message: 'json_schema is not supported' } }, { ok: false, status: 400 }))
+      .mockResolvedValueOnce(jsonResponse(chatPayload('{"ok":true}')));
+
+    const result = await requestProviderJson({
+      systemPrompt: 'Return JSON only.',
+      userPrompt: 'Return an object.',
+      schemaName: 'unit_test',
+      schema: { type: 'object' }
+    }, { config: chatConfig, fetchImpl });
+
+    expect(result.data).toEqual({ ok: true });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const second = JSON.parse(fetchImpl.mock.calls[1][1].body);
+    expect(second.response_format).toEqual({ type: 'json_object' });
+    expect(second.model).toBe('test-model');
+  });
+
+  it('sends the resume analysis schema over chat completions', async () => {
+    const source = [
+      'John Smith',
+      'john@example.com',
+      'Summary: Backend engineer focused on reliable APIs.',
+      'Skills: Node.js, MongoDB',
+      'Leadership and teamwork across three teams.'
+    ].join('\n');
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(chatPayload(JSON.stringify({
+      information: {
+        name: 'John Smith',
+        email: 'john@example.com',
+        phone: null,
+        location: null,
+        links: [],
+        skills: ['Node.js', 'Leadership'],
+        technicalSkills: ['Node.js'],
+        softSkills: ['Leadership'],
+        experience: [],
+        education: [],
+        projects: [],
+        certifications: [],
+        languages: [],
+        achievements: []
+      },
+      summary: 'Backend engineer focused on reliable APIs.',
+      strengths: [{ title: 'Node.js depth', explanation: 'Uses Node.js in production.', evidence: ['Node.js'] }],
+      improvements: [],
+      recommendations: ['Add more detail']
+    }))));
+
+    const result = await analyzeResume(source, { config: chatConfig, fetchImpl });
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body.response_format.json_schema.name).toBe('resume_analysis');
+    expect(body.response_format.json_schema.schema.properties.information.properties.technicalSkills)
+      .toEqual({ type: 'array', items: { type: 'string' } });
+    expect(result.information.technicalSkills).toEqual(['Node.js']);
+    expect(result.information.softSkills).toEqual(['Leadership']);
+    expect(result.model).toBe('test-model');
   });
 });
