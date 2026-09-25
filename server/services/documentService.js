@@ -1,5 +1,8 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import mammoth from 'mammoth';
 import { createCanvas } from '@napi-rs/canvas';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -10,6 +13,19 @@ import { cleanOcrText, recognizeImage } from './ocrService.js';
 const maximumPdfPages = 50;
 const maximumOcrPages = 20;
 const maximumExtractedCharacters = 300000;
+const pdfjsRoot = path.dirname(fileURLToPath(import.meta.resolve('pdfjs-dist/package.json')));
+const pdfjsAsset = (folder) => `${path.join(pdfjsRoot, folder).replace(/\\/g, '/')}/`;
+const pdfjsAssets = {
+  standardFontDataUrl: pdfjsAsset('standard_fonts'),
+  cMapUrl: pdfjsAsset('cmaps'),
+  cMapPacked: true,
+  wasmUrl: pdfjsAsset('wasm')
+};
+for (const asset of ['standard_fonts', 'cmaps', 'wasm']) {
+  if (!existsSync(path.join(pdfjsRoot, asset))) {
+    delete pdfjsAssets[asset === 'standard_fonts' ? 'standardFontDataUrl' : asset === 'cmaps' ? 'cMapUrl' : 'wasmUrl'];
+  }
+}
 
 function cleanExtractedText(value) {
   return String(value || '')
@@ -43,18 +59,20 @@ function requireText(value) {
 async function openPdf(buffer) {
   const task = getDocument({
     data: new Uint8Array(buffer),
+    ...pdfjsAssets,
     disableFontFace: true,
     enableXfa: false,
     maxImageSize: 40_000_000,
     stopAtErrors: true,
-    useSystemFonts: false
+    useSystemFonts: false,
+    verbosity: 0
   });
   const document = await task.promise;
   if (document.numPages < 1 || document.numPages > maximumPdfPages) {
-    await document.destroy();
+    await task.destroy().catch(() => {});
     throw new AppError(`PDF documents must contain between 1 and ${maximumPdfPages} pages`, 422, 'INVALID_PDF');
   }
-  return document;
+  return { task, document };
 }
 
 async function extractPdfText(document) {
@@ -113,9 +131,12 @@ async function extractPdfWithOcr(document) {
 }
 
 async function extractPdf(buffer) {
+  let task;
   let document;
   try {
-    document = await openPdf(buffer);
+    const opened = await openPdf(buffer);
+    task = opened.task;
+    document = opened.document;
     const text = await extractPdfText(document);
     return { text, pageCount: document.numPages, extractionMethod: 'pdf-text' };
   } catch (error) {
@@ -124,7 +145,9 @@ async function extractPdf(buffer) {
     }
     if (!document) {
       try {
-        document = await openPdf(buffer);
+        const opened = await openPdf(buffer);
+        task = opened.task;
+        document = opened.document;
       } catch {
         throw new AppError('The PDF is malformed or cannot be read', 422, 'INVALID_PDF');
       }
@@ -133,7 +156,14 @@ async function extractPdf(buffer) {
     return { text, pageCount: document.numPages, extractionMethod: 'pdf-ocr' };
   } finally {
     if (document) {
-      await document.destroy().catch(() => {});
+      try {
+        document.cleanup();
+      } catch {
+        // the loading task teardown below is what releases the worker
+      }
+    }
+    if (task) {
+      await task.destroy().catch(() => {});
     }
   }
 }

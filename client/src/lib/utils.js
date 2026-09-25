@@ -89,11 +89,11 @@ export function getFieldError(error, field) {
 
 export function scoreMeta(score) {
   const numericScore = toScore(score)
-  if (numericScore === null) return { label: 'Not scored', tone: 'muted', color: 'hsl(215 16% 56%)' }
-  if (numericScore >= 85) return { label: 'Excellent', tone: 'success', color: 'hsl(157 64% 42%)' }
-  if (numericScore >= 70) return { label: 'Strong', tone: 'info', color: 'hsl(205 90% 48%)' }
-  if (numericScore >= 50) return { label: 'Developing', tone: 'warning', color: 'hsl(28 92% 50%)' }
-  return { label: 'Needs attention', tone: 'danger', color: 'hsl(2 72% 54%)' }
+  if (numericScore === null) return { label: 'Not scored', tone: 'muted', color: 'var(--color-muted)', barClass: 'bg-muted' }
+  if (numericScore >= 85) return { label: 'Excellent', tone: 'success', color: 'var(--color-success-foreground)', barClass: 'bg-success' }
+  if (numericScore >= 70) return { label: 'Strong', tone: 'info', color: 'var(--color-primary)', barClass: 'bg-primary' }
+  if (numericScore >= 50) return { label: 'Developing', tone: 'warning', color: 'var(--color-warning-foreground)', barClass: 'bg-warning' }
+  return { label: 'Needs attention', tone: 'danger', color: 'var(--color-error)', barClass: 'bg-error' }
 }
 
 export function getScore(value, fallback = 0) {

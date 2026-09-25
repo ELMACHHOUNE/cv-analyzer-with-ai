@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Chip, ChipRow } from '@/components/ui/chip'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -157,21 +158,24 @@ export function History() {
           </AlertDescription>
         </Alert>
       )}
-      <Card className="mb-6 p-4 sm:p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <Card className="mb-8 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-muted" aria-hidden="true" />
             <Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Search by CV, role, company, or profile" className="pl-10" aria-label="Search history" />
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-full sm:w-40" aria-label="Filter by score"><SelectValue placeholder="Filter" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All scores</SelectItem>
-                <SelectItem value="high">{scoreFloor}+ scores</SelectItem>
-                <SelectItem value="low">Below {scoreFloor}</SelectItem>
-              </SelectContent>
-            </Select>
+            <ChipRow role="group" aria-label="Filter by score">
+              {[
+                { value: 'all', label: 'All scores' },
+                { value: 'high', label: `${scoreFloor}+ scores` },
+                { value: 'low', label: `Below ${scoreFloor}` },
+              ].map((option) => (
+                <Chip key={option.value} active={filter === option.value} onClick={() => setFilter(option.value)}>
+                  {option.label}
+                </Chip>
+              ))}
+            </ChipRow>
             <Select value={sort} onValueChange={setSort}>
               <SelectTrigger className="w-full sm:w-44" aria-label="Sort history"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
@@ -183,7 +187,7 @@ export function History() {
             </Select>
           </div>
         </div>
-        {search && <p className="mt-3 text-xs text-muted-foreground">Filtering on the server for “{search}” and again locally, so both naming styles are covered.</p>}
+        {search && <p className="mt-4 border-t border-hairline pt-4 text-[13px] font-light text-muted">Filtering on the server for “{search}” and again locally, so both naming styles are covered.</p>}
       </Card>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -197,7 +201,7 @@ export function History() {
         </div>
         <TabsContent value="analyses" className="mt-6">
           {loading ? (
-            <div className="space-y-3">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-20 rounded-2xl" />)}</div>
+            <div className="space-y-px bg-hairline">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-20" />)}</div>
           ) : visibleAnalyses.length ? (
             <Card className="overflow-hidden">
               <Table>
@@ -217,18 +221,18 @@ export function History() {
                     return (
                       <TableRow key={id || itemLabel(item, 'analyses')}>
                         <TableCell>
-                          <input type="checkbox" checked={selected.includes(id)} onChange={() => toggleSelected(id)} disabled={!id} aria-label={`Select ${itemLabel(item, 'analyses')} for comparison`} className="h-4 w-4 rounded border-border accent-primary" />
+                          <input type="checkbox" checked={selected.includes(id)} onChange={() => toggleSelected(id)} disabled={!id} aria-label={`Select ${itemLabel(item, 'analyses')} for comparison`} className="h-4 w-4 accent-primary" />
                         </TableCell>
                         <TableCell>
-                          <p className="font-medium text-foreground">{itemLabel(item, 'analyses')}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{item.profile?.fullName || item.resumeName || 'CV analysis'}</p>
+                          <p className="font-bold text-ink">{itemLabel(item, 'analyses')}</p>
+                          <p className="mt-1 text-[12px] font-light text-muted">{item.profile?.fullName || item.resumeName || 'CV analysis'}</p>
                         </TableCell>
-                        <TableCell><span className="font-semibold" style={{ color: meta.color }}>{formatPercent(item.score)}</span></TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{formatDate(item.createdAt)}</TableCell>
+                        <TableCell><span className="font-bold tabular-nums" style={{ color: meta.color }}>{formatPercent(item.score)}</span></TableCell>
+                        <TableCell className="text-[13px] font-light text-muted">{formatDate(item.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-1">
                             {id && <Button asChild variant="ghost" size="sm"><Link to={`/analysis/${encodeURIComponent(id)}`}>Open</Link></Button>}
-                            <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget({ type: 'analysis', item })} aria-label={`Delete ${itemLabel(item, 'analyses')}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget({ type: 'analysis', item })} aria-label={`Delete ${itemLabel(item, 'analyses')}`}><Trash2 className="h-4 w-4 text-error" /></Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -243,13 +247,13 @@ export function History() {
         </TabsContent>
         <TabsContent value="matches" className="mt-6">
           {loading ? (
-            <div className="space-y-3">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-32 rounded-2xl" />)}</div>
+            <div className="space-y-px bg-hairline">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-32" />)}</div>
           ) : visibleMatches.length ? (
             <div className="grid gap-4 lg:grid-cols-2">
               {visibleMatches.map((item) => (
                 <div key={getRecordId(item) || itemLabel(item, 'matches')} className="relative">
                   <JobMatchCard match={item} />
-                  <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget({ type: 'match', item })} aria-label={`Delete ${itemLabel(item, 'matches')}`} className="absolute right-3 top-3"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget({ type: 'match', item })} aria-label={`Delete ${itemLabel(item, 'matches')}`} className="absolute right-3 top-3"><Trash2 className="h-4 w-4 text-error" /></Button>
                 </div>
               ))}
             </div>
@@ -264,7 +268,7 @@ export function History() {
             <DialogTitle>Compare two versions</DialogTitle>
             <DialogDescription>Category scores are read from the score breakdown each analysis returned.</DialogDescription>
           </DialogHeader>
-          {comparison?.first && comparison?.second ? <AnalysisComparison first={comparison.first} second={comparison.second} comparison={comparison} /> : <p className="text-sm text-muted-foreground">The comparison could not be assembled from the available analyses.</p>}
+          {comparison?.first && comparison?.second ? <AnalysisComparison first={comparison.first} second={comparison.second} comparison={comparison} /> : <p className="text-[14px] font-light text-muted">The comparison could not be assembled from the available analyses.</p>}
           <DialogFooter><Button variant="outline" onClick={() => setCompareOpen(false)}>Close</Button></DialogFooter>
         </DialogContent>
       </Dialog>

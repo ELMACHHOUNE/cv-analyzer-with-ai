@@ -146,17 +146,17 @@ export function JobMatcher() {
 
       <div className="grid gap-7 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="p-5 sm:p-7">
-          <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="mb-7 flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">New compatibility check</p>
-              <h2 className="mt-2 font-display text-xl font-semibold">Describe the role</h2>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">The matcher will compare the evidence in your CV with this description.</p>
+              <p className="label-uppercase text-primary">New compatibility check</p>
+              <h2 className="mt-3 text-[20px] leading-[1.3] font-bold">Describe the role</h2>
+              <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">The matcher will compare the evidence in your CV with this description.</p>
             </div>
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary"><Sparkles className="h-5 w-5" /></span>
+            <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><Sparkles className="h-5 w-5" aria-hidden="true" /></span>
           </div>
 
-          <div className="mb-6">
-            <label htmlFor="match-resume" className="text-sm font-medium text-foreground">CV to match</label>
+          <div className="mb-7">
+            <label htmlFor="match-resume" className="text-[14px] font-bold">CV to match</label>
             <Select value={selectedResume} onValueChange={setSelectedResume}>
               <SelectTrigger id="match-resume" className="mt-2">
                 <SelectValue placeholder={resumes.length ? 'Choose a CV version' : 'Upload a CV first'} />
@@ -168,9 +168,9 @@ export function JobMatcher() {
               </SelectContent>
             </Select>
             {!resumes.length && (
-              <p className="mt-2 text-xs text-warning-foreground">
+              <p className="mt-2 text-[13px] font-light text-warning-foreground">
                 You need at least one CV before running a match.{' '}
-                <Link to="/upload" className="font-semibold text-primary hover:underline">Upload one</Link>.
+                <Link to="/upload" className="font-bold text-primary hover:underline">Upload one</Link>.
               </p>
             )}
           </div>
@@ -182,26 +182,26 @@ export function JobMatcher() {
         <Card className="p-5 sm:p-7">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Saved roles</p>
-              <h2 className="mt-2 font-display text-xl font-semibold">Your job library</h2>
+              <p className="label-uppercase text-primary">Saved roles</p>
+              <h2 className="mt-3 text-[20px] leading-[1.3] font-bold">Your job library</h2>
             </div>
             <Badge variant="outline">{jobs.length} {jobs.length === 1 ? 'role' : 'roles'}</Badge>
           </div>
 
           {loading ? (
-            <div className="mt-6 space-y-3">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-20 rounded-xl" />)}</div>
+            <div className="mt-6 space-y-px bg-hairline">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-24" />)}</div>
           ) : jobs.length ? (
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 space-y-px bg-hairline">
               {jobs.map((job) => (
-                <div key={job.id} className="rounded-xl border border-border p-4 transition hover:border-primary/25">
-                  <div className="flex items-start gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><BriefcaseBusiness className="h-4 w-4" /></span>
+                <div key={job.id} className="bg-canvas p-4 transition-colors hover:bg-surface-soft">
+                  <div className="flex items-start gap-4">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><BriefcaseBusiness className="h-4 w-4" aria-hidden="true" /></span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{job.title || 'Untitled role'}</p>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {job.company || 'Company not specified'}{job.location ? ` \u00b7 ${job.location}` : ''}
+                      <p className="truncate text-[15px] font-bold text-ink">{job.title || 'Untitled role'}</p>
+                      <p className="mt-1 truncate text-[13px] font-light text-muted">
+                        {job.company || 'Company not specified'}{job.location ? ` · ${job.location}` : ''}
                       </p>
-                      <p className="mt-3 line-clamp-2 text-xs leading-5 text-muted-foreground">{job.description || 'No description saved.'}</p>
+                      <p className="mt-3 line-clamp-2 text-[13px] leading-[1.55] font-light text-muted">{job.description || 'No description saved.'}</p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -218,7 +218,7 @@ export function JobMatcher() {
                         <DropdownMenuItem onClick={() => editJob(job)}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit and rematch
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => deleteJob(job)} className="text-destructive focus:text-destructive">
+                        <DropdownMenuItem onClick={() => deleteJob(job)} className="text-error focus:text-error">
                           <Trash2 className="mr-2 h-4 w-4" /> Delete role
                         </DropdownMenuItem>
                       </DropdownMenuContent>

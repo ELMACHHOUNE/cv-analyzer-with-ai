@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { AuthShell, AuthSpinner } from '@/components/AuthShell'
@@ -44,5 +44,94 @@ export function Register() {
     }
   }
 
-  return <AuthShell title="Create your workspace" description="Start with a clearer view of the experience you have." footer={<p className="text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link></p>}><form onSubmit={submit} className="space-y-5" noValidate><div className="relative"><UserRound className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" /><Label htmlFor="name" className="sr-only">Full name</Label><Input id="name" name="name" value={values.name} onChange={updateValue} placeholder="Your name" autoComplete="name" className="pl-10" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'name-error' : undefined} />{errors.name && <p id="name-error" className="mt-1.5 text-xs text-destructive">{errors.name}</p>}</div><div className="relative"><Mail className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" /><Label htmlFor="email" className="sr-only">Email address</Label><Input id="email" name="email" type="email" value={values.email} onChange={updateValue} placeholder="you@example.com" autoComplete="email" className="pl-10" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'email-error' : undefined} />{errors.email && <p id="email-error" className="mt-1.5 text-xs text-destructive">{errors.email}</p>}</div><div className="relative"><LockKeyhole className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" /><Label htmlFor="password" className="sr-only">Password</Label><Input id="password" name="password" type={showPassword ? 'text' : 'password'} value={values.password} onChange={updateValue} placeholder="At least 8 characters" autoComplete="new-password" className="px-10" aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'password-error' : undefined} /><button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition hover:text-foreground" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>{errors.password && <p id="password-error" className="mt-1.5 text-xs text-destructive">{errors.password}</p>}</div>{formError && <Alert variant="destructive"><AlertTitle>Account creation failed</AlertTitle><AlertDescription>{formError}</AlertDescription></Alert>}<Button type="submit" className="w-full" disabled={submitting}>{submitting ? <><AuthSpinner /> Creating workspace…</> : 'Create workspace'}</Button><p className="text-center text-[11px] leading-5 text-muted-foreground">Your account stores only what is needed to manage your private CV workspace. Never share passwords or API keys in a CV.</p></form></AuthShell>
+  return (
+    <AuthShell
+      title="Create your workspace"
+      description="Start with a clearer view of the experience you have."
+      footer={(
+        <p className="text-center text-[14px] font-light text-muted">
+          Already have an account? <Link to="/login" className="font-bold text-primary">Sign in</Link>
+        </p>
+      )}
+    >
+      <form onSubmit={submit} className="space-y-5" noValidate>
+        <div>
+          <Label htmlFor="name">Full name</Label>
+          <Input
+            id="name"
+            name="name"
+            value={values.name}
+            onChange={updateValue}
+            placeholder="Your name"
+            autoComplete="name"
+            className="mt-2"
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? 'name-error' : undefined}
+          />
+          {errors.name && <p id="name-error" className="mt-2 text-[13px] font-light text-error">{errors.name}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="email">Email address</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={values.email}
+            onChange={updateValue}
+            placeholder="you@example.com"
+            autoComplete="email"
+            className="mt-2"
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? 'email-error' : undefined}
+          />
+          {errors.email && <p id="email-error" className="mt-2 text-[13px] font-light text-error">{errors.email}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <div className="relative mt-2">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={values.password}
+              onChange={updateValue}
+              placeholder="At least 8 characters"
+              autoComplete="new-password"
+              className="pr-14"
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? 'password-error' : undefined}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="absolute right-1 top-1 grid h-10 w-10 place-items-center text-muted transition-colors hover:text-ink"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+            </button>
+          </div>
+          {errors.password && <p id="password-error" className="mt-2 text-[13px] font-light text-error">{errors.password}</p>}
+        </div>
+
+        {formError && (
+          <Alert variant="destructive">
+            <AlertTitle>Registration failed</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button type="submit" className="w-full" disabled={submitting}>
+          {submitting ? (
+            <>
+              <AuthSpinner /> Creating your workspace…
+            </>
+          ) : (
+            'Create workspace'
+          )}
+        </Button>
+      </form>
+    </AuthShell>
+  )
 }

@@ -75,7 +75,7 @@ export function ImprovementDialog({ analysisId }) {
           </Alert>
         )}
         {loading ? (
-          <div className="flex items-center gap-3 rounded-xl border border-border p-5 text-sm text-muted-foreground" role="status">
+          <div className="flex items-center gap-3 border border-hairline bg-surface-soft p-5 text-[14px] font-light text-muted" role="status">
             <LoaderCircle className="h-5 w-5 animate-spin text-primary" /> Preparing review suggestions…
           </div>
         ) : renderedSuggestions.length || renderedRevisions.length ? (
@@ -83,42 +83,42 @@ export function ImprovementDialog({ analysisId }) {
             {renderedSuggestions.length > 0 && (
               <div className="space-y-3">
                 {renderedSuggestions.map((item, index) => (
-                  <div key={`${item.body}-${index}`} className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div key={`${item.body}-${index}`} className="border border-hairline bg-surface-soft p-4">
                     <div className="flex items-center gap-2 text-primary">
                       <Sparkles className="h-4 w-4" />
                       <p className="text-xs font-bold uppercase tracking-[0.14em]">{item.title || 'Suggested edit'}</p>
                     </div>
-                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground/80">{item.body}</p>
+                    <p className="mt-2 whitespace-pre-line text-[14px] leading-[1.55] font-light text-body">{item.body}</p>
                   </div>
                 ))}
               </div>
             )}
             {renderedRevisions.length > 0 && (
               <div className="space-y-3">
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"><History className="h-3.5 w-3.5" /> Proposed revisions</p>
+                <p className="label-uppercase flex items-center gap-2 text-muted"><History className="h-3.5 w-3.5" aria-hidden="true" /> Proposed revisions</p>
                 {renderedRevisions.map((item, index) => (
-                  <div key={`${item.label}-${index}`} className="rounded-xl border border-border/70 p-4">
+                  <div key={`${item.label}-${index}`} className="border border-hairline p-4">
                     <Badge variant="outline">{item.label}</Badge>
-                    {item.before && <p className="mt-3 text-sm leading-6 text-muted-foreground line-through decoration-destructive/40">{item.before}</p>}
-                    {item.after && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground/85">{item.after}</p>}
+                    {item.before && <p className="mt-3 text-[14px] leading-[1.55] font-light text-muted line-through decoration-error/40">{item.before}</p>}
+                    {item.after && <p className="mt-2 whitespace-pre-line text-[14px] leading-[1.55] font-light text-body">{item.after}</p>}
                   </div>
                 ))}
               </div>
             )}
             {guardrail && (
-              <div className="flex gap-3 rounded-xl border border-success/20 bg-success/5 p-4">
+              <div className="flex gap-3 border border-success/30 bg-success/5 p-4">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                <p className="text-sm leading-6 text-foreground/80">{guardrail}</p>
+                <p className="text-[14px] leading-[1.55] font-light text-body">{guardrail}</p>
               </div>
             )}
           </div>
         ) : result ? (
-          <div className="rounded-xl border border-dashed border-border p-7 text-center text-sm text-muted-foreground">The API returned no suggestions or revisions for this analysis.</div>
+          <div className="border border-dashed border-hairline-strong p-7 text-center text-[14px] font-light text-muted">The API returned no suggestions or revisions for this analysis.</div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border p-7 text-center">
-            <ClipboardPenLine className="mx-auto h-7 w-7 text-muted-foreground/50" />
-            <p className="mt-3 text-sm font-medium text-foreground">Ready when you are</p>
-            <p className="mt-1 text-sm text-muted-foreground">Generate a review list without changing your source document.</p>
+          <div className="border border-dashed border-hairline-strong p-7 text-center">
+            <ClipboardPenLine className="mx-auto h-7 w-7 text-muted-soft" aria-hidden="true" />
+            <p className="mt-3 text-[15px] font-bold">Ready when you are</p>
+            <p className="mt-2 text-[14px] font-light text-muted">Generate a review list without changing your source document.</p>
           </div>
         )}
         <DialogFooter>

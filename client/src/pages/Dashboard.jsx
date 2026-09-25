@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, FileText, RefreshCw, Sparkles, Target, TrendingUp, Trophy } from 'lucide-react'
+import { BriefcaseBusiness, FileText, RefreshCw, Upload } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { EmptyState } from '@/components/EmptyState'
 import { JobMatchCard } from '@/components/JobMatchCard'
 import { PageHeader } from '@/components/PageHeader'
-import { StatCard } from '@/components/StatCard'
+import { StatCell } from '@/components/StatCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ActionLink, Eyebrow } from '@/components/ui/text-link'
 import { useAuth } from '@/context/AuthContext'
 import { analysisApi, dashboardApi, matchApi, resumeApi } from '@/services/api'
 import { formatPercent, formatRelativeDate, getErrorMessage, getFirstName, getRecordId, getScore } from '@/lib/utils'
@@ -55,17 +56,21 @@ export function Dashboard() {
     loadDashboard()
   }, [])
 
-  if (loading) return (
-    <div className="space-y-8">
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-10 w-80 max-w-full" />
-        <Skeleton className="h-5 w-[28rem] max-w-full" />
+  if (loading) {
+    return (
+      <div className="space-y-10">
+        <div className="space-y-3">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-9 w-80 max-w-full" />
+          <Skeleton className="h-4 w-[28rem] max-w-full" />
+        </div>
+        <div className="grid gap-px border border-hairline bg-hairline sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-32" />)}
+        </div>
+        <Skeleton className="h-80" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-36 rounded-2xl" />)}</div>
-      <Skeleton className="h-80 rounded-2xl" />
-    </div>
-  )
+    )
+  }
 
   const dashboard = data.dashboard
   const serverAnalyses = dashboard?.recentAnalyses?.length ? dashboard.recentAnalyses.map(normalizeAnalysis).filter(Boolean) : []
@@ -84,10 +89,16 @@ export function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow="Overview" title={`Good to see you, ${getFirstName(user?.name)}.`} description="Your private workspace for clearer CVs and more intentional applications." action={<Button asChild><Link to="/upload"><Sparkles className="h-4 w-4" /> Analyze a CV</Link></Button>} />
+      <PageHeader
+        eyebrow="Overview"
+        title={`Good to see you, ${getFirstName(user?.name)}.`}
+        description="Your private workspace for clearer CVs and more intentional applications."
+        action={<Button asChild><Link to="/upload"><Upload className="h-4 w-4" aria-hidden="true" /> Analyze a CV</Link></Button>}
+      />
+
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <RefreshCw className="h-4 w-4" />
+        <Alert variant="destructive" className="mb-8">
+          <RefreshCw className="h-4 w-4" aria-hidden="true" />
           <AlertTitle>Some workspace data could not load</AlertTitle>
           <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span>{error}</span>
@@ -95,73 +106,84 @@ export function Dashboard() {
           </AlertDescription>
         </Alert>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Average CV score" value={formatPercent(averageScore)} detail="Across saved analyses" icon={TrendingUp} tone="blue" />
-        <StatCard label="Highest score" value={formatPercent(highestScore)} detail="Your best result so far" icon={Trophy} tone="green" />
-        <StatCard label="CVs in workspace" value={totalResumes} detail="Ready for a closer look" icon={FileText} tone="cyan" />
-        <StatCard label="Analyses run" value={totalAnalyses} detail="Your saved review history" icon={CheckCircle2} tone="green" />
-        <StatCard label="Roles tracked" value={totalJobs} detail={`${totalMatches} compatibility ${totalMatches === 1 ? 'check' : 'checks'}`} icon={BriefcaseBusiness} tone="amber" />
-        <StatCard label="Average match" value={formatPercent(averageMatch)} detail={latestScore === null ? 'Across saved job matches' : `Latest CV score ${Math.round(latestScore)}%`} icon={Target} tone="amber" />
+
+      <div className="grid gap-px border border-hairline bg-hairline sm:grid-cols-2 xl:grid-cols-3">
+        <StatCell label="Average CV score" value={formatPercent(averageScore)} detail="Across saved analyses" />
+        <StatCell label="Highest score" value={formatPercent(highestScore)} detail="Your best result so far" />
+        <StatCell label="CVs in workspace" value={totalResumes} detail="Ready for a closer look" />
+        <StatCell label="Analyses run" value={totalAnalyses} detail="Your saved review history" />
+        <StatCell label="Roles tracked" value={totalJobs} detail={`${totalMatches} compatibility ${totalMatches === 1 ? 'check' : 'checks'}`} />
+        <StatCell label="Average match" value={formatPercent(averageMatch)} detail={latestScore === null ? 'Across saved job matches' : `Latest CV score ${Math.round(latestScore)}%`} />
       </div>
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
+
+      <div className="mt-12 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+        <section>
+          <div className="flex items-end justify-between gap-4 border-b border-hairline pb-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Recent analyses</p>
-              <h2 className="mt-2 font-display text-xl font-semibold tracking-tight">Your latest CV reads</h2>
+              <Eyebrow as="p">Recent analyses</Eyebrow>
+              <h2 className="mt-3 text-[24px] leading-[1.25] font-bold">Your latest CV reads</h2>
             </div>
-            <Link to="/history" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">View history <ArrowRight className="h-3.5 w-3.5" /></Link>
+            <Link to="/history" className="inline-flex min-h-11 items-center"><ActionLink>View history</ActionLink></Link>
           </div>
+
           {recentAnalyses.length ? (
-            <div className="mt-6 space-y-3">
+            <ul className="mt-2 space-y-px bg-hairline">
               {recentAnalyses.map((analysis) => {
                 const id = getRecordId(analysis)
                 return (
-                  <Link key={id || analysis.resumeName} to={id ? `/analysis/${id}` : '/analysis'} className="flex items-center gap-4 rounded-xl border border-border/70 p-3.5 transition hover:border-primary/30 hover:bg-primary/[0.03]">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><FileText className="h-4 w-4" /></span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{analysis.resumeName || analysis.name || 'Untitled analysis'}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatRelativeDate(analysis.createdAt)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-display text-xl font-semibold text-foreground">{formatPercent(analysis.score)}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">score</p>
-                    </div>
-                  </Link>
+                  <li key={id || analysis.resumeName}>
+                    <Link
+                      to={id ? `/analysis/${id}` : '/analysis'}
+                      className="flex items-center gap-4 bg-canvas px-1 py-4 transition-colors duration-150 hover:bg-surface-soft"
+                    >
+                      <span className="grid h-10 w-10 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary">
+                        <FileText className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-bold text-ink">{analysis.resumeName || analysis.name || 'Untitled analysis'}</span>
+                        <span className="mt-1 block text-[13px] font-light text-muted">{formatRelativeDate(analysis.createdAt)}</span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="block text-[22px] leading-[1.2] font-bold tabular-nums text-ink">{formatPercent(analysis.score)}</span>
+                        <span className="label-uppercase text-muted-soft">score</span>
+                      </span>
+                    </Link>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           ) : (
             <EmptyState compact className="mt-6" icon={FileText} title="No analyses yet" description="Upload a CV to create your first structured review." action={<Button size="sm" asChild><Link to="/upload">Upload CV</Link></Button>} />
           )}
-        </Card>
-        <Card className="p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
+        </section>
+
+        <section>
+          <div className="flex items-end justify-between gap-4 border-b border-hairline pb-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Recent matches</p>
-              <h2 className="mt-2 font-display text-xl font-semibold tracking-tight">Roles you explored</h2>
+              <Eyebrow as="p">Recent matches</Eyebrow>
+              <h2 className="mt-3 text-[24px] leading-[1.25] font-bold">Roles you explored</h2>
             </div>
-            <Link to="/matches" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
+            <Link to="/matches" className="inline-flex min-h-11 items-center"><ActionLink>View all</ActionLink></Link>
           </div>
           {recentMatches.length ? (
-            <div className="mt-6 space-y-3">{recentMatches.map((match) => <JobMatchCard key={getRecordId(match) || match.job?.title} match={match} />)}</div>
+            <div className="mt-6 space-y-4">
+              {recentMatches.map((match) => <JobMatchCard key={getRecordId(match) || match.job?.title} match={match} />)}
+            </div>
           ) : (
             <EmptyState compact className="mt-6" icon={BriefcaseBusiness} title="No matches yet" description="Compare a CV with a role description when you are ready." action={<Button size="sm" asChild><Link to="/jobs">Open matcher</Link></Button>} />
           )}
-        </Card>
+        </section>
       </div>
-      <div className="mt-6 rounded-2xl border border-primary/15 bg-primary/[0.04] p-5 sm:p-6">
+
+      <Card className="mt-12 border-l-2 border-l-primary p-6 sm:p-8">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-5 w-5" /></span>
-            <div>
-              <p className="font-semibold text-foreground">Small improvement, compounding clarity.</p>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Use the recommendations in an analysis as a review list, then upload your next version when you are ready.</p>
-            </div>
+          <div>
+            <p className="text-[18px] font-bold">Small improvement, compounding clarity.</p>
+            <p className="mt-2 max-w-2xl text-[15px] leading-[1.55] font-light text-muted">Use the recommendations in an analysis as a review list, then upload your next version when you are ready.</p>
           </div>
-          <Button variant="outline" size="sm" asChild><Link to="/history">Review saved insights</Link></Button>
+          <Button variant="outline" size="sm" asChild className="shrink-0"><Link to="/history">Review saved insights</Link></Button>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

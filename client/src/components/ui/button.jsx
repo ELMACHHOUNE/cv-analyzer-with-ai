@@ -3,23 +3,31 @@ import { cva } from 'class-variance-authority'
 import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
-const buttonVariants = cva('inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]', {
+/*
+  button-primary  : BMW Blue, white type, 14px/700/0.5px, 48px tall, 0px radius
+  button-secondary: canvas plate, 1px hairline-strong outline, ink type
+  on-dark         : transparent, 1px on-dark outline
+  text-link       : UPPERCASE 13px/700/1.5px inline CTA ("LEARN MORE ›")
+*/
+const buttonVariants = cva('inline-flex items-center justify-center gap-2 whitespace-nowrap text-[14px] font-bold tracking-[0.5px] uppercase transition-colors duration-150 outline-none disabled:pointer-events-none disabled:opacity-45', {
   variants: {
     variant: {
-      default: 'bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90',
-      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-      outline: 'border border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5',
-      ghost: 'text-muted-foreground hover:bg-muted hover:text-foreground',
-      subtle: 'bg-primary/10 text-primary hover:bg-primary/15',
-      destructive: 'bg-destructive text-white hover:bg-destructive/90',
-      link: 'text-primary underline-offset-4 hover:underline',
+      default: 'bg-primary text-on-primary active:bg-primary-active',
+      secondary: 'bg-surface-strong text-ink active:bg-hairline-strong',
+      outline: 'border border-hairline-strong bg-canvas text-ink active:bg-surface-strong',
+      onDark: 'border border-on-dark bg-transparent text-on-dark active:bg-on-dark/12',
+      'onDarkSolid': 'bg-on-dark text-surface-dark active:bg-on-dark-soft',
+      dark: 'bg-surface-dark text-on-dark active:bg-surface-dark-elevated',
+      ghost: 'bg-transparent text-ink active:bg-surface-strong',
+      destructive: 'bg-error text-on-error active:opacity-90',
+      link: 'h-auto px-0 text-primary normal-case tracking-normal hover:underline',
     },
     size: {
-      default: 'h-11 px-5 py-2.5',
-      sm: 'h-9 rounded-lg px-3 text-xs',
-      lg: 'h-13 rounded-2xl px-7 text-base',
-      icon: 'h-10 w-10',
-      'icon-sm': 'h-8 w-8 rounded-lg',
+      default: 'h-12 px-8',
+      sm: 'h-10 px-5 text-[13px]',
+      lg: 'h-14 px-9 text-[15px]',
+      icon: 'h-12 w-12 rounded-full',
+      'icon-sm': 'h-10 w-10 rounded-full',
     },
   },
   defaultVariants: {

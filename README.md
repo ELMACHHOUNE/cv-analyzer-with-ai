@@ -10,21 +10,21 @@ Upload a PDF, DOCX or image CV, let the pipeline extract text (with OCR for scan
 
 ## Features
 
-| Area | What it does |
-| --- | --- |
-| Authentication | Register, login, logout, JWT session restore, password change, rate-limited auth routes |
-| CV upload | Drag & drop or browse, PDF / DOCX / JPG / JPEG / PNG, 10 MB cap, real file-signature validation, private non-public storage |
-| Text extraction | PDF text layer, DOCX via `mammoth`, OCR via `tesseract.js`, scanned-PDF OCR fallback with `pdfjs-dist` + `sharp` |
-| CV analysis | Structured profile, technical / soft skills, technologies, experience, education, projects, certifications, languages, achievements |
-| Explainable score | Deterministic 0–100 weighted score with per-category bars, evidence, and a "why this score?" block |
-| Missing information | Determininistic list of what a reviewer would expect to see but cannot find |
-| CV improvement | AI rewrites of summary, bullets and project wording, shown as suggestions for review — never auto-overwritten |
-| Multiple CVs | Name and keep several versions, analyze each independently, compare two versions side by side |
-| Job matcher | Paste a job description (title, company, location, URL) and match it against an analyzed CV |
+| Area                 | What it does                                                                                                                                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication       | Register, login, logout, JWT session restore, password change, rate-limited auth routes                                                                                |
+| CV upload            | Drag & drop or browse, PDF / DOCX / JPG / JPEG / PNG, 10 MB cap, real file-signature validation, private non-public storage                                            |
+| Text extraction      | PDF text layer, DOCX via `mammoth`, OCR via `tesseract.js`, scanned-PDF OCR fallback with `pdfjs-dist` + `sharp`                                                       |
+| CV analysis          | Structured profile, technical / soft skills, technologies, experience, education, projects, certifications, languages, achievements                                    |
+| Explainable score    | Deterministic 0–100 weighted score with per-category bars, evidence, and a "why this score?" block                                                                     |
+| Missing information  | Determininistic list of what a reviewer would expect to see but cannot find                                                                                            |
+| CV improvement       | AI rewrites of summary, bullets and project wording, shown as suggestions for review — never auto-overwritten                                                          |
+| Multiple CVs         | Name and keep several versions, analyze each independently, compare two versions side by side                                                                          |
+| Job matcher          | Paste a job description (title, company, location, URL) and match it against an analyzed CV                                                                            |
 | Explainable matching | 0–100 compatibility with per-category scores, matching/missing skills, matching/missing experience, education compatibility, keyword matches, gaps and recommendations |
-| History | Searchable, filterable, sortable history of analyses and matches with view and delete |
-| Dashboard | Aggregate scores, totals, recent analyses, recent jobs and recent matches |
-| UX | Dark mode, skeletons, staged upload status, empty and error states, responsive layout, reduced-motion support |
+| History              | Searchable, filterable, sortable history of analyses and matches with view and delete                                                                                  |
+| Dashboard            | Aggregate scores, totals, recent analyses, recent jobs and recent matches                                                                                              |
+| UX                   | Dark mode, skeletons, staged upload status, empty and error states, responsive layout, reduced-motion support                                                          |
 
 **No job scraping.** Job data is manual or pasted by the user. Nothing bypasses authentication, anti-bot systems or `robots.txt`.
 
@@ -105,7 +105,7 @@ cv-analyzer-jadara/
 ## Installation
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/ELMACHHOUNE/cv-analyzer-with-ai
 cd cv-analyzer-jadara
 
 cd server && npm install
@@ -140,27 +140,27 @@ The key is read from `process.env` on the server only. There is no `VITE_XAI_API
 
 `server/.env`
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | API port (default `5000`) |
-| `NODE_ENV` | `development` / `test` / `production` |
-| `MONGODB_URI` | Atlas connection string — required |
-| `JWT_SECRET` | ≥ 32 characters — required |
-| `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
-| `CLIENT_URL` / `CORS_ORIGINS` | Comma-separated allowed origins (required allowlist in production) |
-| `XAI_API_KEY` | xAI key — server only |
-| `XAI_MODEL` | Model id (default `grok-4.6`) |
-| `XAI_TIMEOUT_MS` | AI request timeout (default `90000`) |
-| `UPLOAD_DIR` | Private upload directory (default `uploads`) |
-| `MAX_UPLOAD_BYTES` | Upload cap (default `10485760` = 10 MB) |
-| `OCR_LANGUAGES` | Tesseract languages (default `eng`) |
-| `TRUST_PROXY` | `false` or an integer hop count — required when behind a proxy |
-| `AUTH_RATE_LIMIT` / `AI_RATE_LIMIT` | Rate-limit windows |
+| Variable                            | Purpose                                                            |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `PORT`                              | API port (default `5000`)                                          |
+| `NODE_ENV`                          | `development` / `test` / `production`                              |
+| `MONGODB_URI`                       | Atlas connection string — required                                 |
+| `JWT_SECRET`                        | ≥ 32 characters — required                                         |
+| `JWT_EXPIRES_IN`                    | Token lifetime (default `7d`)                                      |
+| `CLIENT_URL` / `CORS_ORIGINS`       | Comma-separated allowed origins (required allowlist in production) |
+| `XAI_API_KEY`                       | xAI key — server only                                              |
+| `XAI_MODEL`                         | Model id (default `grok-4.6`)                                      |
+| `XAI_TIMEOUT_MS`                    | AI request timeout (default `90000`)                               |
+| `UPLOAD_DIR`                        | Private upload directory (default `uploads`)                       |
+| `MAX_UPLOAD_BYTES`                  | Upload cap (default `10485760` = 10 MB)                            |
+| `OCR_LANGUAGES`                     | Tesseract languages (default `eng`)                                |
+| `TRUST_PROXY`                       | `false` or an integer hop count — required when behind a proxy     |
+| `AUTH_RATE_LIMIT` / `AI_RATE_LIMIT` | Rate-limit windows                                                 |
 
 `client/.env`
 
-| Variable | Purpose |
-| --- | --- |
+| Variable       | Purpose                                        |
+| -------------- | ---------------------------------------------- |
 | `VITE_API_URL` | API base URL, e.g. `http://localhost:5000/api` |
 
 Never put `MONGODB_URI`, `JWT_SECRET` or `XAI_API_KEY` in the client, and never commit `.env`.
@@ -196,35 +196,35 @@ All responses use `{ "success": true, "data": {} }` or `{ "success": false, "mes
 
 ### Auth
 
-| Method | Path | Body | Data |
-| --- | --- | --- | --- |
-| POST | `/api/auth/register` | `{ name, email, password }` | `{ user, token, expiresIn }` |
-| POST | `/api/auth/login` | `{ email, password }` | `{ user, token, expiresIn }` |
-| GET 🔒 | `/api/auth/me` | – | `{ user }` |
-| POST 🔒 | `/api/auth/logout` | – | `{ loggedOut }` |
+| Method  | Path                 | Body                        | Data                         |
+| ------- | -------------------- | --------------------------- | ---------------------------- |
+| POST    | `/api/auth/register` | `{ name, email, password }` | `{ user, token, expiresIn }` |
+| POST    | `/api/auth/login`    | `{ email, password }`       | `{ user, token, expiresIn }` |
+| GET 🔒  | `/api/auth/me`       | –                           | `{ user }`                   |
+| POST 🔒 | `/api/auth/logout`   | –                           | `{ loggedOut }`              |
 
 ### Resumes
 
-| Method | Path | Body / Query | Data |
-| --- | --- | --- | --- |
-| POST 🔒 | `/api/resumes/upload` | multipart `file`, `name?` | `{ resume }` |
-| GET 🔒 | `/api/resumes` | `page, limit` | `{ items, pagination }` |
-| GET 🔒 | `/api/resumes/:id` | – | `{ resume }` |
-| PATCH 🔒 | `/api/resumes/:id` | `{ name }` | `{ resume }` |
-| DELETE 🔒 | `/api/resumes/:id` | – | `{ deleted }` |
+| Method    | Path                  | Body / Query              | Data                    |
+| --------- | --------------------- | ------------------------- | ----------------------- |
+| POST 🔒   | `/api/resumes/upload` | multipart `file`, `name?` | `{ resume }`            |
+| GET 🔒    | `/api/resumes`        | `page, limit`             | `{ items, pagination }` |
+| GET 🔒    | `/api/resumes/:id`    | –                         | `{ resume }`            |
+| PATCH 🔒  | `/api/resumes/:id`    | `{ name }`                | `{ resume }`            |
+| DELETE 🔒 | `/api/resumes/:id`    | –                         | `{ deleted }`           |
 
 ### Analysis
 
-| Method | Path | Body / Query | Data |
-| --- | --- | --- | --- |
-| POST 🔒 | `/api/analysis/:resumeId` | `{ name? }` | `{ analysis }` |
-| POST 🔒 | `/api/analysis` | `{ resumeId, name? }` | `{ analysis }` |
-| GET 🔒 | `/api/analysis` | `page, limit, resumeId, search` | `{ items, pagination }` |
-| GET 🔒 | `/api/analysis/latest` | `resumeId?` | `{ analysis }` |
-| GET 🔒 | `/api/analysis/:idOrResumeId` | – | `{ analysis }` |
-| POST 🔒 | `/api/analysis/compare` | `{ analysisIds: [2–4] }` | `{ analyses, summary }` |
-| POST 🔒 | `/api/analysis/:id/improve` | `{ instructions? }` | `{ analysisId, improvement }` |
-| DELETE 🔒 | `/api/analysis/:id` | – | `{ deleted }` |
+| Method    | Path                          | Body / Query                    | Data                          |
+| --------- | ----------------------------- | ------------------------------- | ----------------------------- |
+| POST 🔒   | `/api/analysis/:resumeId`     | `{ name? }`                     | `{ analysis }`                |
+| POST 🔒   | `/api/analysis`               | `{ resumeId, name? }`           | `{ analysis }`                |
+| GET 🔒    | `/api/analysis`               | `page, limit, resumeId, search` | `{ items, pagination }`       |
+| GET 🔒    | `/api/analysis/latest`        | `resumeId?`                     | `{ analysis }`                |
+| GET 🔒    | `/api/analysis/:idOrResumeId` | –                               | `{ analysis }`                |
+| POST 🔒   | `/api/analysis/compare`       | `{ analysisIds: [2–4] }`        | `{ analyses, summary }`       |
+| POST 🔒   | `/api/analysis/:id/improve`   | `{ instructions? }`             | `{ analysisId, improvement }` |
+| DELETE 🔒 | `/api/analysis/:id`           | –                               | `{ deleted }`                 |
 
 An `analysis` exposes both the specification field names and the raw engine data:
 
@@ -232,54 +232,109 @@ An `analysis` exposes both the specification field names and the raw engine data
 {
   "score": 82,
   "label": "Strong foundation",
-  "scoreBreakdown": [{ "key": "skills", "score": 85, "weight": 20, "explanation": "…", "evidence": ["…"] }],
-  "profile": { "fullName": "…", "email": "…", "phone": "…", "location": "…", "summary": "…" },
-  "skills": [], "technicalSkills": [], "softSkills": [], "technologies": [],
-  "experience": [], "education": [], "projects": [],
-  "certifications": [], "languages": [], "achievements": [],
-  "strengths": [], "weaknesses": [], "missingInformation": [], "recommendations": [],
-  "explanation": { "strongPoints": [], "areasToImprove": [], "formula": "…", "disclaimer": "…" }
+  "scoreBreakdown": [
+    {
+      "key": "skills",
+      "score": 85,
+      "weight": 20,
+      "explanation": "…",
+      "evidence": ["…"],
+    },
+  ],
+  "profile": {
+    "fullName": "…",
+    "email": "…",
+    "phone": "…",
+    "location": "…",
+    "summary": "…",
+  },
+  "skills": [],
+  "technicalSkills": [],
+  "softSkills": [],
+  "technologies": [],
+  "experience": [],
+  "education": [],
+  "projects": [],
+  "certifications": [],
+  "languages": [],
+  "achievements": [],
+  "strengths": [],
+  "weaknesses": [],
+  "missingInformation": [],
+  "recommendations": [],
+  "explanation": {
+    "strongPoints": [],
+    "areasToImprove": [],
+    "formula": "…",
+    "disclaimer": "…",
+  },
 }
 ```
 
 ### Jobs and matching
 
-| Method | Path | Body / Query | Data |
-| --- | --- | --- | --- |
-| POST 🔒 | `/api/jobs` | `{ title, description, company?, location?, employmentType?, url?, skills?, notes? }` | `{ job }` |
-| GET 🔒 | `/api/jobs` | `page, limit, search` | `{ items, pagination }` |
-| GET 🔒 | `/api/jobs/:id` | – | `{ job }` |
-| PATCH 🔒 | `/api/jobs/:id` | partial body | `{ job }` |
-| DELETE 🔒 | `/api/jobs/:id` | – | `{ deleted }` |
-| POST 🔒 | `/api/jobs/:jobId/match/:resumeId` | `{ analysisId?, force? }` | `{ match, cached }` |
-| GET 🔒 | `/api/matches` | `page, limit, resumeId, jobId` | `{ items, pagination }` |
-| GET 🔒 | `/api/matches/:id` | – | `{ match }` |
-| DELETE 🔒 | `/api/matches/:id` | – | `{ deleted }` |
+| Method    | Path                               | Body / Query                                                                          | Data                    |
+| --------- | ---------------------------------- | ------------------------------------------------------------------------------------- | ----------------------- |
+| POST 🔒   | `/api/jobs`                        | `{ title, description, company?, location?, employmentType?, url?, skills?, notes? }` | `{ job }`               |
+| GET 🔒    | `/api/jobs`                        | `page, limit, search`                                                                 | `{ items, pagination }` |
+| GET 🔒    | `/api/jobs/:id`                    | –                                                                                     | `{ job }`               |
+| PATCH 🔒  | `/api/jobs/:id`                    | partial body                                                                          | `{ job }`               |
+| DELETE 🔒 | `/api/jobs/:id`                    | –                                                                                     | `{ deleted }`           |
+| POST 🔒   | `/api/jobs/:jobId/match/:resumeId` | `{ analysisId?, force? }`                                                             | `{ match, cached }`     |
+| GET 🔒    | `/api/matches`                     | `page, limit, resumeId, jobId`                                                        | `{ items, pagination }` |
+| GET 🔒    | `/api/matches/:id`                 | –                                                                                     | `{ match }`             |
+| DELETE 🔒 | `/api/matches/:id`                 | –                                                                                     | `{ deleted }`           |
 
 A `match` follows the specification's explainable shape:
 
 ```jsonc
 {
   "score": 87,
-  "scoreBreakdown": [{ "key": "skills", "score": 90, "weight": 40, "explanation": "…", "evidence": [] }],
-  "categoryScores": { "skills": 90, "experience": 80, "education": 70, "keywords": 85, "impact": 75, "completeness": 70 },
-  "matchingSkills": [], "missingSkills": [], "additionalSkills": [],
-  "matchingExperience": [], "missingExperience": [],
-  "educationCompatibility": { "score": 70, "label": "…", "explanation": "…", "evidence": [] },
-  "keywordMatches": [], "strongMatches": [], "gaps": [],
-  "recommendations": [], "explanation": "…"
+  "scoreBreakdown": [
+    {
+      "key": "skills",
+      "score": 90,
+      "weight": 40,
+      "explanation": "…",
+      "evidence": [],
+    },
+  ],
+  "categoryScores": {
+    "skills": 90,
+    "experience": 80,
+    "education": 70,
+    "keywords": 85,
+    "impact": 75,
+    "completeness": 70,
+  },
+  "matchingSkills": [],
+  "missingSkills": [],
+  "additionalSkills": [],
+  "matchingExperience": [],
+  "missingExperience": [],
+  "educationCompatibility": {
+    "score": 70,
+    "label": "…",
+    "explanation": "…",
+    "evidence": [],
+  },
+  "keywordMatches": [],
+  "strongMatches": [],
+  "gaps": [],
+  "recommendations": [],
+  "explanation": "…",
 }
 ```
 
 ### Settings, dashboard, health
 
-| Method | Path | Body | Data |
-| --- | --- | --- | --- |
-| GET 🔒 | `/api/settings` | – | `{ settings: { name, email, targetRole, preferredLanguage, theme } }` |
-| PATCH 🔒 | `/api/settings` | `{ name?, email?, targetRole?, preferredLanguage?, theme? }` | `{ settings }` |
-| PUT 🔒 | `/api/settings/password` | `{ currentPassword, newPassword }` | `{ passwordChanged }` |
-| GET 🔒 | `/api/dashboard` | – | `{ stats, recentAnalyses, recentMatches, topMatches, recentJobs }` |
-| GET | `/api/health` | – | `{ status }` |
+| Method   | Path                     | Body                                                         | Data                                                                  |
+| -------- | ------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| GET 🔒   | `/api/settings`          | –                                                            | `{ settings: { name, email, targetRole, preferredLanguage, theme } }` |
+| PATCH 🔒 | `/api/settings`          | `{ name?, email?, targetRole?, preferredLanguage?, theme? }` | `{ settings }`                                                        |
+| PUT 🔒   | `/api/settings/password` | `{ currentPassword, newPassword }`                           | `{ passwordChanged }`                                                 |
+| GET 🔒   | `/api/dashboard`         | –                                                            | `{ stats, recentAnalyses, recentMatches, topMatches, recentJobs }`    |
+| GET      | `/api/health`            | –                                                            | `{ status }`                                                          |
 
 ### Scoring model
 
@@ -332,8 +387,8 @@ Add your own captures of the landing page, dashboard, upload flow, analysis tabs
 
 ## Team members
 
-| Member | Contribution |
-| --- | --- |
-| Your name | Full-stack, AI integration, UI system |
+| Member               | Contribution                          |
+| -------------------- | ------------------------------------- |
+| Mohamed EL MACHHOUNE | Full-stack, AI integration, UI system |
 
 > This project is educational. Replace the Atlas credentials and the xAI key with your own before any deployment, and never commit them.

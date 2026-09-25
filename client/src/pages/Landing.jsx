@@ -1,41 +1,417 @@
-import { ArrowRight, BarChart3, BriefcaseBusiness, Check, CheckCircle2, FileSearch, Gauge, Layers3, LockKeyhole, ScanText, Sparkles, Target, WandSparkles, Zap } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { BorderBeam, NumberTicker, ShimmerButton, Spotlight } from '@/components/MagicEffects'
-import { Navbar } from '@/components/Navbar'
-import { Logo } from '@/components/Logo'
-import { SectionHeading } from '@/components/SectionHeading'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
-
-const featureCards = [
-  { icon: ScanText, number: '01', title: 'See the signal', text: 'Turn a dense CV into a structured read of skills, experience, projects, and the details that need another look.' },
-  { icon: Target, number: '02', title: 'Match with context', text: 'Compare your evidence with a job description and understand the exact skills, keywords, and gaps behind the score.' },
-  { icon: WandSparkles, number: '03', title: 'Improve deliberately', text: 'Get practical suggestions for your next version without letting a tool quietly overwrite your work.' },
-]
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  FileText,
+  Lock,
+  ShieldCheck,
+  Target,
+  TrendingUp,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { NumberTicker, Reveal } from "@/components/MagicEffects";
+import { Navbar } from "@/components/Navbar";
+import { SectionHeading } from "@/components/SectionHeading";
+import { Logo } from "@/components/Logo";
+import { Button } from "@/components/ui/button";
+import { ActionLink, Eyebrow } from "@/components/ui/text-link";
+import { DarkGrid, Section, SectionInner } from "@/components/ui/section";
 
 const workflow = [
-  { step: '01', title: 'Upload a version', text: 'Start with the CV you have. PDF, DOCX, or image files are welcome.' },
-  { step: '02', title: 'Read the evidence', text: 'The workspace organizes the useful signals and makes uncertainty visible.' },
-  { step: '03', title: 'Choose a direction', text: 'Match against a role, compare versions, and arrive with a sharper story.' },
-]
+  {
+    step: "01",
+    title: "Upload a version",
+    text: "Start with the CV you have. PDF, DOCX, or image files are welcome.",
+  },
+  {
+    step: "02",
+    title: "Read the evidence",
+    text: "The workspace organizes the useful signals and makes uncertainty visible.",
+  },
+  {
+    step: "03",
+    title: "Choose a direction",
+    text: "Match against a role, compare versions, and arrive with a sharper story.",
+  },
+];
 
-const skillBars = [
-  { label: 'Product thinking', value: 88, color: 'bg-cyan-400' },
-  { label: 'Frontend systems', value: 76, color: 'bg-blue-500' },
-  { label: 'Data storytelling', value: 68, color: 'bg-amber-400' },
-  { label: 'Team leadership', value: 54, color: 'bg-slate-400' },
-]
+const features = [
+  {
+    icon: FileText,
+    number: "01",
+    title: "See the signal",
+    text: "Turn a dense CV into a structured read of skills, experience, projects, and the details that need another look.",
+  },
+  {
+    icon: Target,
+    number: "02",
+    title: "Match with context",
+    text: "Compare your evidence with a job description and understand the exact skills, keywords, and gaps behind the score.",
+  },
+  {
+    icon: TrendingUp,
+    number: "03",
+    title: "Improve deliberately",
+    text: "Get practical suggestions for your next version without letting a tool quietly overwrite your work.",
+  },
+];
+
+const scoreBars = [
+  { label: "Product thinking", value: 88 },
+  { label: "Frontend systems", value: 76 },
+  { label: "Data storytelling", value: 68 },
+  { label: "Team leadership", value: 54 },
+];
+
+const proofPoints = [
+  {
+    icon: ShieldCheck,
+    title: "Explainable results",
+    text: "Every score is traceable to the text in your CV.",
+  },
+  {
+    icon: Lock,
+    title: "Your CV stays yours",
+    text: "Documents are only sent to the API you configure.",
+  },
+];
 
 function AnalysisPreview() {
-  return <div className="relative"><BorderBeam className="rounded-3xl" /><Card className="overflow-hidden border-white/10 bg-white/[0.07] text-white shadow-2xl shadow-cyan-950/30 backdrop-blur"><div className="flex items-center justify-between border-b border-white/10 px-5 py-4"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-cyan-300" /><span className="text-xs font-semibold text-slate-300">Analysis preview</span></div><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-slate-400">Illustrative</span></div><div className="grid gap-6 p-5 sm:p-7"><div className="flex items-end justify-between"><div><p className="text-xs uppercase tracking-[0.18em] text-slate-400">CV signal score</p><p className="mt-2 font-display text-5xl font-semibold tracking-[-0.08em]"><NumberTicker value={82} /><span className="text-xl text-slate-400"> / 100</span></p></div><span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-xs font-semibold text-cyan-200">Strong foundation</span></div><div className="space-y-4">{skillBars.map((item) => <div key={item.label}><div className="mb-1.5 flex justify-between text-xs"><span className="text-slate-300">{item.label}</span><span className="font-semibold text-white">{item.value}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className={cn('h-full rounded-full', item.color)} style={{ width: `${item.value}%` }} /></div></div>)}</div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="flex items-center gap-2 text-cyan-200"><Sparkles className="h-4 w-4" /><span className="text-xs font-semibold">One useful next move</span></div><p className="mt-2 text-sm leading-6 text-slate-300">Make your product impact measurable with a before-and-after result in the experience section.</p></div></div></Card></div>
+  return (
+    <div className="border border-hairline bg-canvas">
+      <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
+        <p className="label-uppercase text-muted">Analysis preview</p>
+        <p className="label-uppercase text-muted-soft">Illustrative</p>
+      </div>
+      <div className="p-5 sm:p-7">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <Eyebrow tone="muted" as="p">
+              CV signal score
+            </Eyebrow>
+            <p className="mt-3 text-[56px] leading-[1.05] font-bold tabular-nums text-ink">
+              <NumberTicker value={82} />
+              <span className="text-[18px] font-light text-muted"> / 100</span>
+            </p>
+          </div>
+          <p className="label-uppercase text-primary">Strong foundation</p>
+        </div>
+
+        <div className="mt-8 space-y-5">
+          {scoreBars.map((item) => (
+            <div key={item.label}>
+              <div className="mb-2 flex items-center justify-between text-[13px]">
+                <span className="font-light text-body">{item.label}</span>
+                <span className="font-bold tabular-nums text-ink">
+                  {item.value}%
+                </span>
+              </div>
+              <div className="h-2 bg-surface-strong">
+                <div
+                  className="h-full bg-primary"
+                  style={{ width: `${item.value}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 border-l-2 border-primary bg-surface-soft p-4">
+          <Eyebrow tone="primary" as="p">
+            One useful next move
+          </Eyebrow>
+          <p className="mt-2 text-[14px] leading-[1.55] font-light text-body">
+            Make your product impact measurable with a before-and-after result
+            in the experience section.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function MatchingPreview() {
-  return <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"><div className="relative overflow-hidden rounded-3xl bg-ink p-5 text-white shadow-2xl sm:p-7"><div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-400/15 blur-3xl" /><div className="relative flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">Compatibility result</p><h3 className="mt-2 font-display text-2xl font-semibold tracking-tight">Senior product engineer</h3><p className="mt-1 text-sm text-slate-400">Northstar · Remote</p></div><div className="grid h-20 w-20 place-items-center rounded-full border-4 border-cyan-300/20 border-t-cyan-300 text-center"><span className="font-display text-2xl font-semibold">87%</span></div></div><div className="relative mt-8 grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-white/10 bg-white/5 p-3"><p className="text-xs text-slate-400">Strong matches</p><p className="mt-2 text-sm font-semibold">React · Systems thinking · Discovery</p></div><div className="rounded-xl border border-white/10 bg-white/5 p-3"><p className="text-xs text-slate-400">Worth exploring</p><p className="mt-2 text-sm font-semibold">TypeScript · Cloud delivery</p></div></div><div className="relative mt-6 border-t border-white/10 pt-5"><p className="text-xs font-semibold text-cyan-200">Why this score?</p><p className="mt-2 text-sm leading-6 text-slate-300">Your experience aligns on the core work. The remaining gap is evidence of the tooling this role calls out most often.</p></div></div><div className="rounded-3xl border border-border bg-card p-5 shadow-card sm:p-7"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Match evidence</p><h3 className="mt-2 font-display text-2xl font-semibold tracking-tight">Readable, not mysterious.</h3></div><BarChart3 className="h-6 w-6 text-primary" /></div><div className="mt-7 space-y-5">{[['Skills alignment', 90, 'bg-primary'], ['Experience relevance', 84, 'bg-cyan-500'], ['Education fit', 72, 'bg-amber-400'], ['Keyword coverage', 68, 'bg-slate-400']].map(([label, value, color]) => <div key={label}><div className="mb-2 flex justify-between text-sm"><span className="text-foreground/80">{label}</span><span className="font-semibold text-foreground">{value}%</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className={cn('h-full rounded-full', color)} style={{ width: `${value}%` }} /></div></div>)}</div><p className="mt-7 text-xs leading-5 text-muted-foreground">Illustrative preview only. Your result is based on the CV and job description you provide.</p></div></div>
+function MatchPreview() {
+  return (
+    <div className="grid gap-px border border-on-dark/15 bg-on-dark/15 lg:grid-cols-2">
+      <div className="bg-surface-dark p-6 sm:p-8">
+        <p className="label-uppercase text-on-dark-soft">
+          Compatibility result
+        </p>
+        <h3 className="mt-3 text-[24px] leading-[1.25] font-bold text-on-dark">
+          Senior product engineer
+        </h3>
+        <p className="mt-1.5 text-[14px] font-light text-on-dark-soft">
+          Northstar · Remote
+        </p>
+        <p className="mt-8 text-[64px] leading-[1.05] font-bold tabular-nums text-on-dark">
+          87<span className="text-[20px] font-light text-on-dark-soft">%</span>
+        </p>
+        <p className="mt-3 border-t border-on-dark/15 pt-4 text-[14px] leading-[1.55] font-light text-on-dark-soft">
+          Your experience aligns on the core work. The remaining gap is evidence
+          of the tooling this role calls out most often.
+        </p>
+      </div>
+      <div className="grid gap-px bg-on-dark/15">
+        <div className="bg-surface-dark p-6 sm:p-8">
+          <p className="label-uppercase text-on-dark-soft">Strong matches</p>
+          <p className="mt-3 text-[15px] leading-[1.55] font-light text-on-dark">
+            React · Systems thinking · Discovery
+          </p>
+        </div>
+        <div className="bg-surface-dark p-6 sm:p-8">
+          <p className="label-uppercase text-on-dark-soft">Worth exploring</p>
+          <p className="mt-3 text-[15px] leading-[1.55] font-light text-on-dark">
+            TypeScript · Cloud delivery
+          </p>
+        </div>
+        <div className="bg-surface-dark p-6 sm:p-8">
+          <p className="label-uppercase text-on-dark-soft">Why this score?</p>
+          <p className="mt-3 text-[15px] leading-[1.55] font-light text-on-dark">
+            Keyword overlap, evidence strength, and role-specific requirements,
+            reviewed together.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function Landing() {
-  return <div className="min-h-screen overflow-hidden bg-canvas text-foreground"><Navbar /><main><section className="relative bg-ink text-white"><div className="absolute inset-0 app-grid opacity-30" /><div className="absolute left-1/2 top-0 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" /><div className="relative mx-auto grid max-w-7xl gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:gap-20 lg:px-10 lg:pb-28"><div><div className="mb-7 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-200"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> Career intelligence, without the guesswork</div><h1 className="max-w-3xl font-display text-5xl font-semibold leading-[0.98] tracking-[-0.075em] sm:text-6xl lg:text-7xl">Understand your CV.<br /><span className="text-cyan-300">Match your career.</span></h1><p className="mt-7 max-w-xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">AI-powered CV analysis and job compatibility in one intelligent workspace. See what is strong, what is missing, and what to improve next.</p><div className="mt-9 flex flex-col gap-3 sm:flex-row"><ShimmerButton size="lg" asChild><Link to="/register">Analyze my CV <ArrowRight className="h-4 w-4" /></Link></ShimmerButton><Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:border-white/30 hover:bg-white/10" asChild><Link to="/jobs">Try job matcher <BriefcaseBusiness className="h-4 w-4" /></Link></Button></div><div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs text-slate-400"><span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-cyan-300" /> Explainable results</span><span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-cyan-300" /> Your source CV stays yours</span><span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-cyan-300" /> No credit card required</span></div></div><Spotlight className="relative"><AnalysisPreview /></Spotlight></div><div className="relative border-t border-white/10"><div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10"><span>One workspace for the story behind your next application.</span><span className="flex items-center gap-4"><span className="inline-flex items-center gap-1.5"><LockKeyhole className="h-3.5 w-3.5" /> Private by design</span><span className="inline-flex items-center gap-1.5"><Zap className="h-3.5 w-3.5" /> Built for momentum</span></span></div></div></section><section className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"><SectionHeading eyebrow="A sharper signal" title="Less self-review. More informed next steps." description="CVision turns the work already in your CV into a clear starting point for better conversations, stronger applications, and more intentional career choices." /><div className="mt-14 grid gap-5 md:grid-cols-3">{featureCards.map(({ icon: Icon, number, title, text }) => <Spotlight key={number} className="rounded-2xl"><Card className="h-full border-border/80 bg-card p-6 transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/30"><div className="flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="font-display text-sm font-semibold text-muted-foreground/50">{number}</span></div><h3 className="mt-8 font-display text-xl font-semibold tracking-tight">{title}</h3><p className="mt-3 text-sm leading-7 text-muted-foreground">{text}</p></Card></Spotlight>)}</div></section><section id="how-it-works" className="border-y border-border bg-muted/25"><div className="mx-auto grid max-w-7xl gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-10 lg:py-32"><div><SectionHeading eyebrow="The workflow" title="From document to direction." description="A focused loop that respects the work you have already done." /></div><div className="grid gap-0">{workflow.map((item, index) => <div key={item.step} className="grid grid-cols-[52px_minmax(0,1fr)] gap-5 border-b border-border py-6 first:pt-0 last:border-0 last:pb-0 sm:grid-cols-[70px_minmax(0,1fr)] sm:gap-8"><span className="font-display text-sm font-semibold text-primary">{item.step}</span><div><h3 className="font-display text-xl font-semibold tracking-tight">{item.title}</h3><p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">{item.text}</p>{index < workflow.length - 1 && <div className="mt-6 h-px w-16 bg-primary/20" />}</div></div>)}</div></div></section><section id="analysis" className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"><div className="grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center"><div><SectionHeading eyebrow="CV analysis" title="A score with a reason." description="A single score is useful only when you can trace it back to your evidence. CVision organizes the story behind the number so you can make an informed next edit." /><div className="mt-8 space-y-4">{['Profile and contact signal', 'Skills, experience, and education', 'Strengths, gaps, and missing information', 'Actionable recommendations for review'].map((item) => <div key={item} className="flex items-center gap-3 text-sm text-foreground/80"><span className="grid h-6 w-6 place-items-center rounded-full bg-success/10 text-success"><Check className="h-3.5 w-3.5" /></span>{item}</div>)}</div><Button variant="link" className="mt-7 px-0" asChild><Link to="/register">Start with your CV <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div><AnalysisPreview /></div></section><section id="job-matching" className="border-y border-border bg-ink text-white"><div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"><div className="mb-14 flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><SectionHeading eyebrow="Job matching" title="Know the gap before the interview." description="Paste a role description, choose a CV, and get a compatibility read that tells you what to bring forward and what to consider learning next." /><Badge variant="dark" className="w-fit"><Target className="h-3.5 w-3.5 text-cyan-300" /> Explainable matching</Badge></div><MatchingPreview /></div></section><section className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"><div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end"><SectionHeading eyebrow="Designed for the whole picture" title="A calm interface for a noisy decision." description="Every surface is built to help you move from raw information to a clear next action." /><div className="grid grid-cols-2 gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-border bg-card p-5"><FileSearch className="h-5 w-5 text-primary" /><p className="mt-6 font-display text-lg font-semibold">Signal first</p><p className="mt-2 text-xs leading-5 text-muted-foreground">No vanity metrics without context.</p></div><div className="rounded-2xl border border-border bg-card p-5"><Layers3 className="h-5 w-5 text-cyan-500" /><p className="mt-6 font-display text-lg font-semibold">Version aware</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Keep and compare multiple CVs.</p></div><div className="col-span-2 rounded-2xl border border-border bg-card p-5 sm:col-span-1"><Gauge className="h-5 w-5 text-amber-500" /><p className="mt-6 font-display text-lg font-semibold">Human in control</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Suggestions never overwrite source.</p></div></div></div><div className="mt-24 rounded-3xl border border-primary/15 bg-primary/[0.04] p-8 sm:p-12"><div className="flex flex-col justify-between gap-8 md:flex-row md:items-center"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Your next version starts here</p><h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Make your next application easier to understand.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">Create a private workspace, upload the CV you have, and let the evidence point you forward.</p></div><ShimmerButton size="lg" asChild><Link to="/register">Create your workspace <ArrowRight className="h-4 w-4" /></Link></ShimmerButton></div></div></section><section className="border-t border-border bg-muted/25"><div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-10"><div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between"><p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Built with thoughtful tools</p><div className="flex flex-wrap gap-2"><Badge variant="outline" className="bg-background/60">React 19</Badge><Badge variant="outline" className="bg-background/60">Tailwind CSS v4</Badge><Badge variant="outline" className="bg-background/60">Recharts</Badge><Badge variant="outline" className="bg-background/60">Radix UI</Badge><Badge variant="outline" className="bg-background/60">AI-ready API</Badge></div></div></div></section></main><footer className="border-t border-border bg-canvas"><div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10"><div><Logo /><p className="mt-3 text-xs text-muted-foreground">Career intelligence for the next thoughtful move.</p></div><div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-xs font-medium text-muted-foreground"><a href="#analysis" className="transition hover:text-foreground">Analysis</a><a href="#job-matching" className="transition hover:text-foreground">Job matching</a><Link to="/login" className="transition hover:text-foreground">Sign in</Link><Link to="/register" className="transition hover:text-foreground">Get started</Link></div><p className="text-xs text-muted-foreground">© {new Date().getFullYear()} CVision AI</p></div></footer></div>
+  return (
+    <div className="min-h-screen bg-canvas">
+      <Navbar />
+
+      {/* 01 · hero-band-dark */}
+      <Section tone="dark" size="xl" className="relative overflow-hidden">
+        <DarkGrid />
+        <SectionInner className="relative grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20">
+          <div>
+            <Eyebrow tone="soft" className="mb-6">
+              Career intelligence, without the guesswork
+            </Eyebrow>
+            <h1 className="max-w-3xl text-[44px] leading-[1.05] font-bold text-balance text-on-dark sm:text-[56px] lg:text-[64px]">
+              Understand your CV.{" "}
+              <span className="text-primary-on-dark">Match your career.</span>
+            </h1>
+            <p className="mt-7 max-w-2xl text-[18px] leading-[1.55] font-light text-on-dark-soft">
+              CV analysis and job compatibility in one workspace. See what is
+              strong, what is missing, and what to improve next.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" asChild>
+                <Link to="/register">
+                  Analyze my CV{" "}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="onDark" asChild>
+                <Link to="/jobs">
+                  Try the job matcher{" "}
+                  <BriefcaseBusiness className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <dl className="grid gap-px border border-on-dark/15 bg-on-dark/15 sm:grid-cols-2">
+            {proofPoints.map(({ icon: Icon, title, text }) => (
+              <div key={title} className="bg-surface-dark p-6">
+                <Icon
+                  className="h-5 w-5 text-primary-on-dark"
+                  aria-hidden="true"
+                />
+                <dt className="mt-5 text-[16px] font-bold text-on-dark">
+                  {title}
+                </dt>
+                <dd className="mt-2 text-[14px] leading-[1.55] font-light text-on-dark-soft">
+                  {text}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </SectionInner>
+      </Section>
+
+      {/* 02 · how it works — canvas */}
+      <Section id="how-it-works" tone="canvas">
+        <SectionInner>
+          <SectionHeading
+            eyebrow="How it works"
+            title="Three steps, no guesswork."
+            description="A deliberate workflow: bring a document, read the evidence, decide where to go next."
+          />
+          <ol className="mt-14 grid gap-px border border-hairline bg-hairline md:grid-cols-3">
+            {workflow.map((item) => (
+              <li key={item.step} className="bg-canvas p-7">
+                <p className="text-[32px] leading-[1.1] font-bold tabular-nums text-primary">
+                  {item.step}
+                </p>
+                <h3 className="mt-6 text-[20px] leading-[1.3] font-bold">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-[15px] leading-[1.55] font-light text-muted">
+                  {item.text}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </SectionInner>
+      </Section>
+
+      {/* 03 · analysis — soft grey */}
+      <Section id="analysis" tone="soft">
+        <SectionInner className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20">
+          <div>
+            <SectionHeading
+              eyebrow="Analysis"
+              title="A read of the evidence, not a verdict."
+              description="CVision turns a dense document into structured signals: skills, experience, projects, and the details that need another look."
+            />
+            <ul className="mt-8 space-y-4">
+              {[
+                "Category scores you can interrogate",
+                "Extracted skills, education, and experience",
+                "Recommendations you review, never automatic rewrites",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex gap-4 border-b border-hairline pb-4 text-[15px] leading-[1.55] font-light text-body"
+                >
+                  <span
+                    className="mt-2.5 h-px w-4 shrink-0 bg-primary"
+                    aria-hidden="true"
+                  />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/register"
+              className="mt-8 inline-flex min-h-11 items-center"
+            >
+              <ActionLink>Start an analysis</ActionLink>
+            </Link>
+          </div>
+          <Reveal>
+            <AnalysisPreview />
+          </Reveal>
+        </SectionInner>
+      </Section>
+
+      {/* 04 · job matching — navy */}
+      <Section
+        id="job-matching"
+        tone="dark"
+        className="relative overflow-hidden"
+      >
+        <DarkGrid />
+        <SectionInner className="relative">
+          <SectionHeading
+            eyebrow="Job matching"
+            title="Match with context."
+            description="See which requirements your evidence already covers — and which ones are worth closing before you apply."
+            onDark
+          />
+          <div className="mt-14">
+            <MatchPreview />
+          </div>
+        </SectionInner>
+      </Section>
+
+      {/* 05 · features — canvas */}
+      <Section tone="canvas">
+        <SectionInner>
+          <SectionHeading
+            eyebrow="What you get"
+            title="Built for clearer applications."
+          />
+          <div className="mt-14 space-y-px bg-hairline">
+            {features.map(({ icon: Icon, number, title, text }) => (
+              <div
+                key={number}
+                className="grid gap-5 bg-canvas p-7 sm:grid-cols-[72px_1fr] sm:gap-8"
+              >
+                <div>
+                  <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
+                  <p className="mt-3 text-[13px] font-bold tabular-nums text-muted-soft">
+                    {number}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-[22px] leading-[1.3] font-bold">
+                    {title}
+                  </h3>
+                  <p className="mt-3 max-w-2xl text-[15px] leading-[1.55] font-light text-muted">
+                    {text}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionInner>
+      </Section>
+
+      {/* 06 · final CTA — plate */}
+      <Section tone="card">
+        <SectionInner className="text-center">
+          <SectionHeading
+            align="center"
+            eyebrow="Get started"
+            title="Read your CV like a strategist would."
+            description="Upload a version, see the signals, and decide what to fix before the next application."
+          />
+          <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button size="lg" asChild>
+              <Link to="/register">
+                Create your workspace{" "}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/login">Sign in</Link>
+            </Button>
+          </div>
+        </SectionInner>
+      </Section>
+
+      <footer className="border-t border-hairline bg-canvas">
+        <SectionInner className="flex flex-col items-start justify-between gap-6 py-12 sm:flex-row sm:items-center">
+          <div>
+            <Logo />
+            <p className="mt-4 text-[13px] font-light text-muted">
+              Career intelligence for clearer applications.
+            </p>
+          </div>
+          <nav
+            className="flex flex-wrap gap-x-8 gap-y-3"
+            aria-label="Footer navigation"
+          >
+            <a
+              href="#how-it-works"
+              className="label-uppercase text-muted transition-colors hover:text-primary"
+            >
+              How it works
+            </a>
+            <a
+              href="#analysis"
+              className="label-uppercase text-muted transition-colors hover:text-primary"
+            >
+              Analysis
+            </a>
+            <a
+              href="#job-matching"
+              className="label-uppercase text-muted transition-colors hover:text-primary"
+            >
+              Job matching
+            </a>
+            <Link
+              to="/login"
+              className="label-uppercase text-muted transition-colors hover:text-primary"
+            >
+              Sign in
+            </Link>
+          </nav>
+        </SectionInner>
+      </footer>
+    </div>
+  );
 }

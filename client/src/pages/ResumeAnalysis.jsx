@@ -24,31 +24,32 @@ import { asText, normalizeAnalysis, normalizeList, normalizeResume } from '@/lib
 
 function InsightPanel({ title, items, tone = 'default', icon: Icon = Check, emptyLabel }) {
   const values = safeArray(items).filter(Boolean)
-  const toneClasses = tone === 'warning' ? 'border-warning/20 bg-warning/5' : tone === 'danger' ? 'border-destructive/20 bg-destructive/5' : 'border-success/20 bg-success/5'
-  const iconClasses = tone === 'warning' ? 'text-warning' : tone === 'danger' ? 'text-destructive' : 'text-success'
+  const accent = tone === 'warning' ? 'border-l-warning' : tone === 'danger' ? 'border-l-error' : 'border-l-success'
+  const iconTone = tone === 'warning' ? 'text-warning-foreground' : tone === 'danger' ? 'text-error' : 'text-success-foreground'
   return (
-    <Card className={`relative p-5 ${values.length ? '' : 'border-dashed'}`}>
+    <Card className={`border-l-2 p-5 ${accent} ${values.length ? '' : 'border-dashed'}`}>
       <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${iconClasses}`} />
-        <h3 className="font-display font-semibold">{title}</h3>
+        <Icon className={`h-4 w-4 ${iconTone}`} aria-hidden="true" />
+        <h3 className="text-[16px] font-bold">{title}</h3>
       </div>
       {values.length ? (
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-5 space-y-4">
           {values.map((item, index) => (
-            <li key={`${item.item || item}-${index}`} className="flex gap-2.5 text-sm leading-6 text-foreground/80">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-60" />
-              <span>
-                {item.item && <span className="font-medium text-foreground">{item.item}</span>}
-                {item.explanation && <span className={item.item ? ' block text-muted-foreground' : ''}>{item.explanation}</span>}
-                {safeArray(item.evidence).length > 0 && <span className="mt-1 block text-xs text-muted-foreground">{safeArray(item.evidence).slice(0, 2).join(' · ')}</span>}
+            <li key={`${item.item || item}-${index}`} className="text-[14px] leading-[1.55] font-light text-body">
+              <span className="flex gap-3">
+                <span className="mt-2.5 h-px w-3 shrink-0 bg-current opacity-40" aria-hidden="true" />
+                <span>
+                  {item.item && <span className="font-bold text-ink">{item.item}</span>}
+                  {item.explanation && <span className={item.item ? ' block' : ''}>{item.explanation}</span>}
+                  {safeArray(item.evidence).length > 0 && <span className="mt-1 block text-[12px] text-muted">{safeArray(item.evidence).slice(0, 2).join(' · ')}</span>}
+                </span>
               </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-muted-foreground">{emptyLabel || `No ${title.toLowerCase()} were returned.`}</p>
+        <p className="mt-3 text-[14px] font-light text-muted">{emptyLabel || `No ${title.toLowerCase()} were returned.`}</p>
       )}
-      <span className={`pointer-events-none absolute inset-0 -z-10 rounded-2xl ${toneClasses}`} />
     </Card>
   )
 }
@@ -57,19 +58,24 @@ function TextPanel({ title, items, description, emptyLabel, icon: Icon = Check }
   const values = safeArray(items).filter(Boolean)
   return (
     <Card className="p-5 sm:p-6">
-      <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-success/10 text-success"><Icon className="h-4 w-4" /></span>
+      <div className="flex items-center gap-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><Icon className="h-5 w-5" aria-hidden="true" /></span>
         <div>
-          <h2 className="font-display text-lg font-semibold">{title}</h2>
-          {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
+          <h2 className="text-[18px] leading-[1.3] font-bold">{title}</h2>
+          {description && <p className="mt-1 text-[13px] font-light text-muted">{description}</p>}
         </div>
       </div>
       {values.length ? (
-        <ul className="mt-5 space-y-2.5">
-          {values.map((item, index) => <li key={`${item}-${index}`} className="flex gap-2.5 text-sm leading-6 text-foreground/80"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />{item}</li>)}
+        <ul className="mt-6 space-y-3">
+          {values.map((item, index) => (
+            <li key={`${item}-${index}`} className="flex gap-3 text-[14px] leading-[1.55] font-light text-body">
+              <span className="mt-2.5 h-px w-3 shrink-0 bg-primary" aria-hidden="true" />
+              {item}
+            </li>
+          ))}
         </ul>
       ) : (
-        <p className="mt-5 rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">{emptyLabel}</p>
+        <p className="mt-5 border border-dashed border-hairline-strong p-5 text-[14px] font-light text-muted">{emptyLabel}</p>
       )}
     </Card>
   )
@@ -77,22 +83,22 @@ function TextPanel({ title, items, description, emptyLabel, icon: Icon = Check }
 
 function ProjectList({ projects = [] }) {
   const items = safeArray(projects)
-  if (!items.length) return <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No projects were returned for this CV.</div>
+  if (!items.length) return <div className="border border-dashed border-hairline-strong p-8 text-center text-[14px] font-light text-muted">No projects were returned for this CV.</div>
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-px border border-hairline bg-hairline md:grid-cols-2">
       {items.map((project, index) => (
-        <Card key={`${project.name}-${index}`} className="p-5">
+        <Card key={`${project.name}-${index}`} tone="soft" className="border-0 p-5">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-semibold text-foreground">{project.name || 'Project'}</h3>
+            <h3 className="text-[16px] font-bold text-ink">{project.name || 'Project'}</h3>
             <Badge variant="outline">Project</Badge>
           </div>
-          {project.role && <p className="mt-1 text-xs text-muted-foreground">{project.role}</p>}
-          {project.description && <p className="mt-3 text-sm leading-6 text-foreground/75">{project.description}</p>}
-          <div className="mt-4 flex flex-wrap gap-1.5">
+          {project.role && <p className="mt-1 text-[12px] tracking-[0.5px] text-muted">{project.role}</p>}
+          {project.description && <p className="mt-3 text-[14px] leading-[1.55] font-light text-body">{project.description}</p>}
+          <div className="mt-4 flex flex-wrap gap-2">
             {safeArray(project.technologies).map((technology) => <SkillBadge key={technology} skill={technology} />)}
             {safeArray(project.skills).map((skill) => <SkillBadge key={skill} skill={skill} />)}
           </div>
-          {project.url && <a href={project.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">View project <ExternalLink className="h-3.5 w-3.5" /></a>}
+          {project.url && <a href={project.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-bold text-primary hover:underline">View project <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a>}
         </Card>
       ))}
     </div>
@@ -109,30 +115,30 @@ function ProfileCard({ profile = {} }) {
   ]
   return (
     <Card className="p-5 sm:p-6">
-      <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><UserRound className="h-5 w-5" /></span>
+      <div className="flex items-center gap-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><UserRound className="h-5 w-5" aria-hidden="true" /></span>
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Profile</p>
-          <h2 className="mt-1 font-display text-lg font-semibold">The person behind the CV</h2>
+          <p className="label-uppercase text-primary">Profile</p>
+          <h2 className="mt-3 text-[18px] leading-[1.3] font-bold">The person behind the CV</h2>
         </div>
       </div>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <dl className="mt-6 grid gap-px border border-hairline bg-hairline sm:grid-cols-2">
         {fields.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="flex items-start gap-2.5">
-            <Icon className="mt-0.5 h-4 w-4 text-primary" />
+          <div key={label} className="flex items-start gap-3 bg-canvas p-4">
+            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className="mt-1 break-words text-sm font-medium text-foreground">{value || 'Not provided'}</p>
+              <dt className="label-uppercase text-muted">{label}</dt>
+              <dd className="mt-2 break-words text-[14px] font-bold text-ink">{value || 'Not provided'}</dd>
             </div>
           </div>
         ))}
-      </div>
+      </dl>
       {links.length > 0 && (
-        <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
-          {links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">{link.label}<ExternalLink className="h-3 w-3" /></a>)}
+        <div className="mt-5 flex flex-wrap gap-4 border-t border-hairline pt-5">
+          {links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-primary hover:underline">{link.label}<ExternalLink className="h-3 w-3" aria-hidden="true" /></a>)}
         </div>
       )}
-      {profile.summary && <div className="mt-5 border-t border-border pt-5"><p className="text-xs font-semibold text-muted-foreground">Professional summary</p><p className="mt-2 text-sm leading-7 text-foreground/80">{profile.summary}</p></div>}
+      {profile.summary && <div className="mt-5 border-t border-hairline pt-5"><p className="label-uppercase text-muted">Professional summary</p><p className="mt-3 text-[15px] leading-[1.55] font-light text-body">{profile.summary}</p></div>}
     </Card>
   )
 }
@@ -246,11 +252,11 @@ export function ResumeAnalysis() {
       {requestedResumeId ? (
         <div className="space-y-5">
           <Card className="p-6 sm:p-8">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><FileText className="h-5 w-5" /></span>
+            <div className="flex items-start gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><FileText className="h-5 w-5" aria-hidden="true" /></span>
               <div>
-                <p className="font-semibold">{displayName}</p>
-                <p className="mt-1 text-sm text-muted-foreground">The server has not returned an analysis for this version yet.</p>
+                <p className="text-[16px] font-bold">{displayName}</p>
+                <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">The server has not returned an analysis for this version yet.</p>
               </div>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -273,10 +279,11 @@ export function ResumeAnalysis() {
   return (
     <div>
       <PageHeader eyebrow="CV analysis" title={displayName} description={`An evidence-led view of your CV — ${formatDate(analysis.createdAt)}`} action={<div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link to="/history">All analyses</Link></Button><ImprovementDialog analysisId={analysis.id} /></div>} />
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-success" /> Analysis data returned by your API
-        </div>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="flex items-center gap-2 text-[12px] tracking-[0.5px] text-muted">
+          <span className="h-1.5 w-1.5 bg-success" aria-hidden="true" />
+          Analysis data returned by your API
+        </p>
         {resumes.length > 0 && (
           <Select value={getRecordId(resume) || requestedResumeId || ''} onValueChange={(value) => value && navigate(`/analysis?resumeId=${encodeURIComponent(value)}`)}>
             <SelectTrigger className="w-full sm:w-64" aria-label="Choose a CV analysis"><SelectValue placeholder="Choose a CV version" /></SelectTrigger>
@@ -314,36 +321,36 @@ export function ResumeAnalysis() {
         </TabsContent>
         <TabsContent value="skills" className="mt-6 space-y-5">
           <SkillChart skills={analysis.skills} categories={analysis.categories} />
-          <div className="grid gap-5 lg:grid-cols-3">
-            <Card className="p-5 sm:p-6">
-              <h2 className="font-display text-lg font-semibold">Technical skills</h2>
+          <div className="grid gap-px border border-hairline bg-hairline lg:grid-cols-3">
+            <Card tone="soft" className="border-0 p-5">
+              <h2 className="text-[16px] font-bold">Technical skills</h2>
               <div className="mt-4 flex flex-wrap gap-2">
-                {safeArray(analysis.technicalSkills).length ? safeArray(analysis.technicalSkills).map((skill) => <SkillBadge key={skill} skill={skill} />) : <p className="text-sm text-muted-foreground">No technical skills were returned separately.</p>}
+                {safeArray(analysis.technicalSkills).length ? safeArray(analysis.technicalSkills).map((skill) => <SkillBadge key={skill} skill={skill} />) : <p className="text-[14px] font-light text-muted">No technical skills were returned separately.</p>}
               </div>
             </Card>
-            <Card className="p-5 sm:p-6">
-              <h2 className="font-display text-lg font-semibold">Soft skills</h2>
+            <Card tone="soft" className="border-0 p-5">
+              <h2 className="text-[16px] font-bold">Soft skills</h2>
               <div className="mt-4 flex flex-wrap gap-2">
-                {safeArray(analysis.softSkills).length ? safeArray(analysis.softSkills).map((skill) => <SkillBadge key={skill} skill={skill} variant="success" />) : <p className="text-sm text-muted-foreground">No soft skills were returned separately.</p>}
+                {safeArray(analysis.softSkills).length ? safeArray(analysis.softSkills).map((skill) => <SkillBadge key={skill} skill={skill} variant="success" />) : <p className="text-[14px] font-light text-muted">No soft skills were returned separately.</p>}
               </div>
             </Card>
-            <Card className="p-5 sm:p-6">
-              <h2 className="font-display text-lg font-semibold">Technologies</h2>
+            <Card tone="soft" className="border-0 p-5">
+              <h2 className="text-[16px] font-bold">Technologies</h2>
               <div className="mt-4 flex flex-wrap gap-2">
-                {safeArray(analysis.technologies).length ? safeArray(analysis.technologies).map((technology) => <SkillBadge key={technology} skill={technology} variant="outline" />) : <p className="text-sm text-muted-foreground">No technologies were returned separately.</p>}
+                {safeArray(analysis.technologies).length ? safeArray(analysis.technologies).map((technology) => <SkillBadge key={technology} skill={technology} variant="outline" />) : <p className="text-[14px] font-light text-muted">No technologies were returned separately.</p>}
               </div>
             </Card>
           </div>
           <Card className="p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="font-display text-lg font-semibold">Detected skills</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Structured skills returned by the analysis.</p>
+                <h2 className="text-[16px] font-bold">Detected skills</h2>
+                <p className="mt-1 text-[13px] font-light text-muted">Structured skills returned by the analysis.</p>
               </div>
               <Badge variant="outline">{safeArray(analysis.skills).length} signals</Badge>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
-              {safeArray(analysis.skills).length ? safeArray(analysis.skills).map((skill, index) => <SkillBadge key={`${asText(skill)}-${index}`} skill={skill} confidence={typeof skill === 'object' ? skill?.confidence ?? skill?.level : undefined} />) : <p className="text-sm text-muted-foreground">No skills were returned.</p>}
+              {safeArray(analysis.skills).length ? safeArray(analysis.skills).map((skill, index) => <SkillBadge key={`${asText(skill)}-${index}`} skill={skill} confidence={typeof skill === 'object' ? skill?.confidence ?? skill?.level : undefined} />) : <p className="text-[14px] font-light text-muted">No skills were returned.</p>}
             </div>
           </Card>
         </TabsContent>
@@ -352,35 +359,35 @@ export function ResumeAnalysis() {
         <TabsContent value="projects" className="mt-6"><ProjectList projects={analysis.projects} /></TabsContent>
         <TabsContent value="certifications" className="mt-6 space-y-5">
           <Card className="p-5 sm:p-6">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300"><Check className="h-5 w-5" /></span>
+            <div className="flex items-center gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><Check className="h-5 w-5" aria-hidden="true" /></span>
               <div>
-                <h2 className="font-display text-lg font-semibold">Certifications</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Credentials included in the CV analysis.</p>
+                <h2 className="text-[18px] leading-[1.3] font-bold">Certifications</h2>
+                <p className="mt-1 text-[13px] font-light text-muted">Credentials included in the CV analysis.</p>
               </div>
             </div>
             {safeArray(analysis.certifications).length ? (
-              <div className="mt-6 grid gap-3 md:grid-cols-2">
+              <div className="mt-6 grid gap-px border border-hairline bg-hairline md:grid-cols-2">
                 {safeArray(analysis.certifications).map((certification, index) => (
-                  <div key={`${certification.name}-${index}`} className="rounded-xl border border-border p-4">
-                    <p className="font-semibold text-foreground">{certification.name || 'Certification'}</p>
-                    {(certification.issuer || certification.date) && <p className="mt-1 text-xs text-muted-foreground">{[certification.issuer, certification.date].filter(Boolean).join(' · ')}</p>}
+                  <div key={`${certification.name}-${index}`} className="bg-canvas p-4">
+                    <p className="text-[15px] font-bold text-ink">{certification.name || 'Certification'}</p>
+                    {(certification.issuer || certification.date) && <p className="mt-1 text-[12px] tracking-[0.5px] text-muted">{[certification.issuer, certification.date].filter(Boolean).join(' · ')}</p>}
                   </div>
                 ))}
               </div>
-            ) : <p className="mt-6 rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">No certifications were returned for this analysis.</p>}
+            ) : <p className="mt-6 border border-dashed border-hairline-strong p-6 text-[14px] font-light text-muted">No certifications were returned for this analysis.</p>}
           </Card>
           <TextPanel title="Languages" items={safeArray(analysis.languages).map((item) => item.name)} description="Spoken languages recorded in the CV." emptyLabel="No languages were returned for this analysis." />
         </TabsContent>
         <TabsContent value="recommendations" className="mt-6 space-y-6">
           <RecommendationCard recommendations={analysis.recommendations} title="Next improvements" />
           <TextPanel title="Achievements" items={safeArray(analysis.achievements).map((item) => item.name)} description="Wins the analysis surfaced from the CV." emptyLabel="No achievements were returned for this analysis." />
-          <Card className="flex flex-col gap-4 border-primary/15 bg-primary/[0.04] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+          <Card className="flex flex-col gap-5 border-l-2 border-l-primary p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex items-start gap-4">
+              <Sparkles className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Keep the source in control</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Use suggestions as a review list. Your uploaded CV is never changed by this page.</p>
+                <p className="text-[16px] font-bold">Keep the source in control</p>
+                <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">Use suggestions as a review list. Your uploaded CV is never changed by this page.</p>
               </div>
             </div>
             <ImprovementDialog analysisId={analysis.id} />

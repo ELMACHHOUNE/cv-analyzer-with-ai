@@ -1,9 +1,34 @@
-import { ArrowUpRight, Lightbulb } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { Eyebrow } from '@/components/ui/text-link'
 import { safeArray } from '@/lib/utils'
 
-export function RecommendationCard({ recommendations = [], title = 'Recommendations', limit }) {
+/* Recommendations are numbered, not decorated — editorial, and scannable. */
+export function RecommendationCard({ recommendations = [], title = 'Recommendations', description = 'Suggestions to review, never automatic changes.', limit }) {
   const items = safeArray(recommendations)
   const visibleItems = limit ? items.slice(0, limit) : items
-  return <Card className="p-5 sm:p-6"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-300"><Lightbulb className="h-4 w-4" /></span><div><h2 className="font-display text-lg font-semibold">{title}</h2><p className="text-xs text-muted-foreground">Suggestions to review, never automatic changes.</p></div></div>{visibleItems.length ? <div className="mt-5 space-y-3">{visibleItems.map((recommendation, index) => { const text = typeof recommendation === 'string' ? recommendation : recommendation?.text || recommendation?.title || recommendation?.recommendation; if (!text) return null; return <div key={`${text}-${index}`} className="flex gap-3 rounded-xl border border-border/70 bg-muted/30 p-3.5"><ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><p className="text-sm leading-6 text-foreground/80">{text}</p></div> })}</div> : <p className="mt-5 rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">No recommendations were returned for this analysis.</p>}</Card>
+
+  return (
+    <Card className="p-5 sm:p-7">
+      <Eyebrow as="p">Next moves</Eyebrow>
+      <h2 className="mt-3 text-[20px] leading-[1.3] font-bold">{title}</h2>
+      <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">{description}</p>
+
+      {visibleItems.length ? (
+        <ol className="mt-7 space-y-px bg-hairline">
+          {visibleItems.map((recommendation, index) => {
+            const text = typeof recommendation === 'string' ? recommendation : recommendation?.text || recommendation?.title || recommendation?.recommendation
+            if (!text) return null
+            return (
+              <li key={`${text}-${index}`} className="flex gap-5 bg-canvas px-1 py-5">
+                <span className="shrink-0 text-[20px] leading-[1.2] font-bold tabular-nums text-primary">{String(index + 1).padStart(2, '0')}</span>
+                <p className="text-[15px] leading-[1.6] font-light text-body">{text}</p>
+              </li>
+            )
+          })}
+        </ol>
+      ) : (
+        <p className="mt-7 border border-dashed border-hairline-strong p-5 text-[14px] font-light text-muted">No recommendations were returned for this analysis.</p>
+      )}
+    </Card>
+  )
 }

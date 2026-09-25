@@ -21,9 +21,9 @@ const emptyProfile = { name: '', email: '', targetRole: '', preferredLanguage: '
 const languageOptions = ['English', 'Spanish', 'French', 'German', 'Portuguese', 'Dutch', 'Arabic']
 
 const themeChoices = [
-  { value: 'system', label: 'System', detail: 'Follows your device', icon: Monitor, swatch: 'bg-gradient-to-br from-slate-100 to-slate-800' },
-  { value: 'light', label: 'Light', detail: 'Bright and clear', icon: Sun, swatch: 'bg-white' },
-  { value: 'dark', label: 'Dark', detail: 'Low-light focused', icon: Moon, swatch: 'bg-slate-900' },
+  { value: 'system', label: 'System', detail: 'Follows your device', icon: Monitor, swatch: 'bg-surface-strong text-ink' },
+  { value: 'light', label: 'Light', detail: 'Bright and clear', icon: Sun, swatch: 'bg-canvas text-ink' },
+  { value: 'dark', label: 'Dark', detail: 'Low-light focused', icon: Moon, swatch: 'bg-surface-dark text-on-dark' },
 ]
 
 function isConflict(error) {
@@ -171,11 +171,11 @@ export function Settings() {
           <Card className="p-5 sm:p-7">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarFallback className="bg-primary/10 text-base text-primary">{getInitials(profile.name || user?.name)}</AvatarFallback>
+                <AvatarFallback className="bg-surface-strong text-base text-ink">{getInitials(profile.name || user?.name)}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Profile</p>
-                <h2 className="mt-1 font-display text-xl font-semibold">Your public workspace identity</h2>
+                <p className="label-uppercase text-primary">Profile</p>
+                <h2 className="mt-3 text-[20px] leading-[1.3] font-bold">Your workspace identity</h2>
               </div>
             </div>
             <Separator className="my-7" />
@@ -183,25 +183,25 @@ export function Settings() {
               <div>
                 <Label htmlFor="settings-name">Name</Label>
                 <Input id="settings-name" value={profile.name} onChange={(event) => updateProfileField('name', event.target.value)} className="mt-2" autoComplete="name" aria-invalid={Boolean(errors.name)} />
-                {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>}
+                {errors.name && <p className="mt-2 text-[13px] font-light text-error">{errors.name}</p>}
               </div>
               <div>
                 <Label htmlFor="settings-email">Email</Label>
                 <Input id="settings-email" type="email" value={profile.email} onChange={(event) => updateProfileField('email', event.target.value)} className="mt-2" autoComplete="email" aria-invalid={Boolean(errors.email)} />
-                {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
+                {errors.email && <p className="mt-2 text-[13px] font-light text-error">{errors.email}</p>}
               </div>
               <div>
-                <Label htmlFor="settings-role">Target role <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Label htmlFor="settings-role">Target role <span className="font-normal text-muted">(optional)</span></Label>
                 <div className="relative mt-2">
-                  <Target className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+                  <Target className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-muted" aria-hidden="true" />
                   <Input id="settings-role" value={profile.targetRole} onChange={(event) => updateProfileField('targetRole', event.target.value)} placeholder="Senior frontend engineer" className="pl-10" aria-invalid={Boolean(errors.targetRole)} />
                 </div>
-                {errors.targetRole && <p className="mt-1.5 text-xs text-destructive">{errors.targetRole}</p>}
+                {errors.targetRole && <p className="mt-2 text-[13px] font-light text-error">{errors.targetRole}</p>}
               </div>
               <div>
-                <Label htmlFor="settings-language">Preferred language <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Label htmlFor="settings-language">Preferred language <span className="font-normal text-muted">(optional)</span></Label>
                 <div className="relative mt-2">
-                  <Languages className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+                  <Languages className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-muted" aria-hidden="true" />
                   <Input id="settings-language" list="settings-language-options" value={profile.preferredLanguage} onChange={(event) => updateProfileField('preferredLanguage', event.target.value)} placeholder="English" className="pl-10" />
                   <datalist id="settings-language-options">
                     {languageOptions.map((option) => <option key={option} value={option} />)}
@@ -212,14 +212,14 @@ export function Settings() {
             </form>
           </Card>
           <Card className="p-5 sm:p-7">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300"><KeyRound className="h-5 w-5" /></span>
+            <div className="flex items-center gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><KeyRound className="h-5 w-5" aria-hidden="true" /></span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Security</p>
-                <h2 className="mt-1 font-display text-xl font-semibold">Change password</h2>
+                <p className="label-uppercase text-primary">Security</p>
+                <h2 className="mt-3 text-[20px] leading-[1.3] font-bold">Change password</h2>
               </div>
             </div>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">Use a unique password you do not reuse elsewhere. This form only sends the fields required to change it.</p>
+            <p className="mt-3 text-[14px] leading-[1.55] font-light text-muted">Use a unique password you do not reuse elsewhere. This form only sends the fields required to change it.</p>
             {reauthNotice && (
               <Alert className="mt-5">
                 <ShieldCheck className="h-4 w-4" />
@@ -231,17 +231,17 @@ export function Settings() {
               <div>
                 <Label htmlFor="current-password">Current password</Label>
                 <Input id="current-password" type="password" value={password.currentPassword} onChange={(event) => { setPassword((current) => ({ ...current, currentPassword: event.target.value })); setErrors((current) => ({ ...current, currentPassword: '' })) }} className="mt-2" autoComplete="current-password" aria-invalid={Boolean(errors.currentPassword)} />
-                {errors.currentPassword && <p className="mt-1.5 text-xs text-destructive">{errors.currentPassword}</p>}
+                {errors.currentPassword && <p className="mt-2 text-[13px] font-light text-error">{errors.currentPassword}</p>}
               </div>
               <div>
                 <Label htmlFor="new-password">New password</Label>
                 <Input id="new-password" type="password" value={password.newPassword} onChange={(event) => { setPassword((current) => ({ ...current, newPassword: event.target.value })); setErrors((current) => ({ ...current, newPassword: '' })) }} className="mt-2" autoComplete="new-password" aria-invalid={Boolean(errors.newPassword)} />
-                {errors.newPassword && <p className="mt-1.5 text-xs text-destructive">{errors.newPassword}</p>}
+                {errors.newPassword && <p className="mt-2 text-[13px] font-light text-error">{errors.newPassword}</p>}
               </div>
               <div>
                 <Label htmlFor="confirm-password">Confirm new password</Label>
                 <Input id="confirm-password" type="password" value={password.confirmPassword} onChange={(event) => { setPassword((current) => ({ ...current, confirmPassword: event.target.value })); setErrors((current) => ({ ...current, confirmPassword: '' })) }} className="mt-2" autoComplete="new-password" aria-invalid={Boolean(errors.confirmPassword)} />
-                {errors.confirmPassword && <p className="mt-1.5 text-xs text-destructive">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && <p className="mt-2 text-[13px] font-light text-error">{errors.confirmPassword}</p>}
               </div>
               <Button type="submit" variant="outline" disabled={savingPassword}>{savingPassword ? 'Updating…' : 'Update password'}</Button>
             </form>
@@ -249,24 +249,32 @@ export function Settings() {
         </div>
         <div className="space-y-6">
           <Card className="p-5 sm:p-7">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-300"><Palette className="h-5 w-5" /></span>
+            <div className="flex items-center gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><Palette className="h-5 w-5" aria-hidden="true" /></span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">Appearance</p>
-                <h2 className="mt-1 font-display text-xl font-semibold">Choose your light</h2>
+                <p className="label-uppercase text-primary">Appearance</p>
+                <h2 className="mt-3 text-[20px] leading-[1.3] font-bold">Choose your light</h2>
               </div>
             </div>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">Your choice applies immediately and is saved to your account as <code className="rounded bg-muted px-1 py-0.5 text-xs">system</code>, <code className="rounded bg-muted px-1 py-0.5 text-xs">light</code>, or <code className="rounded bg-muted px-1 py-0.5 text-xs">dark</code>. Until you save it, the local default applies.</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <p className="mt-3 text-[14px] leading-[1.55] font-light text-muted">Your choice applies immediately and is saved to your account as <code className="bg-surface-strong px-1.5 py-0.5 text-[12px]">system</code>, <code className="bg-surface-strong px-1.5 py-0.5 text-[12px]">light</code>, or <code className="bg-surface-strong px-1.5 py-0.5 text-[12px]">dark</code>. Until you save it, the local default applies.</p>
+            <div className="mt-6 grid gap-px border border-hairline bg-hairline sm:grid-cols-3">
               {themeChoices.map((choice) => (
-                <button key={choice.value} type="button" onClick={() => chooseTheme(choice.value)} className={`flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition ${profile.theme === choice.value ? 'border-primary bg-primary/5 ring-2 ring-primary/10' : 'border-border hover:border-primary/40'}`} aria-pressed={profile.theme === choice.value}>
-                  <span className={`grid h-9 w-9 place-items-center rounded-lg shadow-sm ${choice.swatch} ${choice.value === 'dark' ? 'text-cyan-200' : 'text-slate-700'}`}><choice.icon className="h-4 w-4" /></span>
+                <button
+                  key={choice.value}
+                  type="button"
+                  onClick={() => chooseTheme(choice.value)}
+                  className={`flex flex-col items-start gap-3 p-4 text-left transition-colors duration-150 ${profile.theme === choice.value ? 'bg-surface-soft' : 'bg-canvas hover:bg-surface-soft'}`}
+                  aria-pressed={profile.theme === choice.value}
+                >
+                  <span className={`grid h-10 w-10 place-items-center border border-hairline ${choice.swatch}`}>
+                    <choice.icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
                   <span className="flex w-full items-center justify-between gap-2">
                     <span>
-                      <span className="block text-sm font-semibold">{choice.label}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">{choice.detail}</span>
+                      <span className="block text-[15px] font-bold">{choice.label}</span>
+                      <span className="mt-1 block text-[13px] font-light text-muted">{choice.detail}</span>
                     </span>
-                    {profile.theme === choice.value && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                    {profile.theme === choice.value && <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
                   </span>
                 </button>
               ))}
@@ -276,24 +284,24 @@ export function Settings() {
               {theme !== profile.theme && <Badge variant="outline">Local choice not yet saved</Badge>}
             </div>
           </Card>
-          <Card className="border-success/20 bg-success/5 p-5 sm:p-7">
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+          <Card className="border-success/30 bg-success/5 p-5 sm:p-7">
+            <div className="flex items-start gap-4">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
               <div>
-                <h2 className="font-display text-lg font-semibold">Security boundary</h2>
-                <p className="mt-2 text-sm leading-6 text-foreground/75">CVision is designed to keep credentials on the server. This client receives only a JWT in browser storage and never asks for an AI or database secret.</p>
+                <h2 className="text-[18px] font-bold">Security boundary</h2>
+                <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">CVision is designed to keep credentials on the server. This client receives only a JWT in browser storage and never asks for an AI or database secret.</p>
               </div>
             </div>
           </Card>
           <Card className="p-5 sm:p-7">
             <div className="flex items-center gap-3">
-              <UserRound className="h-5 w-5 text-primary" />
-              <h2 className="font-display text-lg font-semibold">Account principles</h2>
+              <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h2 className="text-[18px] font-bold">Account principles</h2>
             </div>
-            <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
-              <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-success" /> Uploaded files are selected explicitly.</li>
-              <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-success" /> Suggestions never overwrite source documents.</li>
-              <li className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-success" /> No secret fields are stored in this client.</li>
+            <ul className="mt-5 space-y-3 text-[14px] font-light text-muted">
+              <li className="flex gap-3"><Check className="h-4 w-4 shrink-0 text-success" aria-hidden="true" /> Uploaded files are selected explicitly.</li>
+              <li className="flex gap-3"><Check className="h-4 w-4 shrink-0 text-success" aria-hidden="true" /> Suggestions never overwrite source documents.</li>
+              <li className="flex gap-3"><Check className="h-4 w-4 shrink-0 text-success" aria-hidden="true" /> No secret fields are stored in this client.</li>
             </ul>
           </Card>
         </div>
