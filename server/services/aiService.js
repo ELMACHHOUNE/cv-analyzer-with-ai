@@ -628,8 +628,8 @@ export async function analyzeJobDescription(description, dependencies = {}) {
     throw new AppError('Job description is required', 400, 'JOB_DESCRIPTION_REQUIRED');
   }
   const response = await requestProviderJson({
-    systemPrompt: `${baseSystemPrompt} Distinguish required qualifications from preferences and do not scrape or infer from a URL.`,
-    userPrompt: `Return {"summary":"","skills":[],"keywords":[],"responsibilities":[],"requirements":[{"text":"","required":true,"category":"skill|experience|education|certification|language|other"}],"experienceRequirements":"","educationRequirements":"","languageRequirements":[],"sourceEvidence":[]} using only this manually pasted description: ${JSON.stringify(source)}`,
+    systemPrompt: `${baseSystemPrompt} Distinguish required qualifications from preferences and do not scrape or infer from a URL. Every returned phrase must be an exact contiguous span copied from the pasted description, because any wording that does not appear verbatim in it is discarded.`,
+    userPrompt: `Return {"summary":"a short factual summary","skills":["a skill named in the description"],"keywords":["a recurring term from the description"],"responsibilities":["a responsibility copied word for word from the description"],"requirements":[{"text":"a requirement copied word for word from the description","required":true,"category":"skill|experience|education|certification|language|other"}],"experienceRequirements":"the experience requirement copied word for word, or an empty string","educationRequirements":"the education requirement copied word for word, or an empty string","languageRequirements":["a language named in the description"],"sourceEvidence":["an exact quote from the description"]}. List every requirement you can find rather than none, and give each one a single category value. Only use this manually pasted description: ${JSON.stringify(source)}`,
     schemaName: 'job_analysis',
     schema: jobAnalysisSchema
   }, dependencies);
