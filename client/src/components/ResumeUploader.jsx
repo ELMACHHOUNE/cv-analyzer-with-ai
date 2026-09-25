@@ -171,9 +171,9 @@ export function ResumeUploader({
       detail: "The file is on its way to your private workspace.",
     },
     queued: {
-      title: "Upload complete · processing queued",
+      title: "Upload complete · text extracted",
       detail:
-        "The API is still processing this document. We will only show an analysis when the server returns one.",
+        "The document is stored and its text is ready. The analysis runs next.",
     },
     complete: {
       title: "Upload received",

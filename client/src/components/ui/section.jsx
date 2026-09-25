@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
   inside a 1440px container. Consecutive bands must not repeat the same
   surface value — that rotation is what carries the page.
 */
-export const containerClass = 'mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10'
+export const containerClass = ' mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10'
 
 export function Section({ className, tone = 'canvas', size = 'section', id, ...props }) {
   return (
@@ -19,7 +19,8 @@ export function Section({ className, tone = 'canvas', size = 'section', id, ...p
           strong: 'bg-surface-strong text-ink',
           dark: 'bg-surface-dark text-on-dark',
         }[tone],
-        size === 'section' ? 'py-section' : size === 'xl' ? 'py-24' : size === 'lg' ? 'py-16' : 'py-12',
+        /* Band rhythm is capped at {spacing.section} (80px) - 96px is BMW M's value. */
+        size === 'lg' ? 'py-14 lg:py-16' : size === 'sm' ? 'py-12' : 'py-16 lg:py-section',
         className,
       )}
       {...props}

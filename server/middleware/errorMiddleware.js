@@ -59,6 +59,11 @@ export function errorMiddleware(error, req, res, _next) {
     success: false,
     message: normalized.message
   };
+  /* 4xx bodies stay byte-identical to the documented contract; 5xx responses
+     carry the internal code so the client can explain a provider failure. */
+  if (normalized.statusCode >= 500) {
+    response.code = normalized.code;
+  }
   if (normalized.details && normalized.statusCode < 500) {
     response.details = normalized.details;
   }

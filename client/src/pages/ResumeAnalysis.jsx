@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, Brain, Check, ExternalLink, FileText, Mail, MapPin, Phone, RefreshCw, Sparkles, UserRound } from 'lucide-react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { EducationCard } from '@/components/EducationCard'
 import { EmptyState } from '@/components/EmptyState'
@@ -146,6 +146,7 @@ function ProfileCard({ profile = {} }) {
 export function ResumeAnalysis() {
   const { analysisId } = useParams()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const requestedResumeId = searchParams.get('resumeId')
   const [analysis, setAnalysis] = useState(null)
@@ -154,6 +155,7 @@ export function ResumeAnalysis() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [runRequested, setRunRequested] = useState(false)
+  const [runFailure, setRunFailure] = useState(() => location.state?.runFailure || null)
 
   const load = async () => {
     setLoading(true)
@@ -165,15 +167,26 @@ export function ResumeAnalysis() {
         nextAnalysis = await analysisApi.get(analysisId)
       } else if (requestedResumeId) {
         try {
-          nextAnalysis = await analysisApi.latest(requestedResumeId)
-        } catch {
-          const list = normalizeList(await analysisApi.list({ resumeId: requestedResumeId }), 'analyses')
-          nextAnalysis = list.find((item) => getRecordId(item?.resume || item?.resumeId) === requestedResumeId) || list[0] || null
-        }
-        try {
-          nextResume = await resumeApi.get(requestedResumeId)
+          nextResume = normalizeResume(await resumeApi.get(requestedResumeId))
         } catch {
           nextResume = null
+        }
+        /* The resume payload carries its own latest-analysis reference, so an
+           unanalyzed CV never has to ask /analysis/latest and eat a 404. */
+        const referenceId = nextResume?.analysisId || nextResume?.analysis?.id
+        if (referenceId) {
+          try {
+            nextAnalysis = await analysisApi.get(referenceId)
+          } catch {
+            nextAnalysis = null
+          }
+        } else if (!nextResume) {
+          /* The resume itself could not be read, so ask the API directly. */
+          try {
+            nextAnalysis = await analysisApi.latest(requestedResumeId)
+          } catch {
+            nextAnalysis = null
+          }
         }
       } else {
         try {
@@ -205,6 +218,7 @@ export function ResumeAnalysis() {
   const requestAnalysis = async () => {
     if (!requestedResumeId) return
     setRunRequested(true)
+    setRunFailure(null)
     try {
       const created = await analysisApi.create(requestedResumeId)
       const normalized = normalizeAnalysis(created)
@@ -216,7 +230,9 @@ export function ResumeAnalysis() {
         toast.success('Analysis request queued.')
       }
     } catch (requestError) {
-      toast.error(getErrorMessage(requestError, 'The analysis request failed.'))
+      const message = [getErrorMessage(requestError, 'The analysis request failed.'), getErrorDetailText(requestError)].filter(Boolean).join(' ')
+      setRunFailure({ message, code: requestError?.code || '' })
+      toast.error(message)
     } finally {
       setRunRequested(false)
     }
@@ -245,8 +261,8 @@ export function ResumeAnalysis() {
     <div>
       <PageHeader
         eyebrow="CV analysis"
-        title={requestedResumeId ? 'Your CV is still processing' : 'No analysis yet'}
-        description={requestedResumeId ? 'The upload was received, but the API has not returned structured analysis data yet.' : 'Upload a CV or run an analysis to see your structured review here.'}
+        title={requestedResumeId ? 'Ready to analyze this CV' : 'No analysis yet'}
+        description={requestedResumeId ? 'The document is saved and its text was extracted. It has not been analyzed yet.' : 'Upload a CV or run an analysis to see your structured review here.'}
         action={<Button asChild><Link to="/upload">Upload a CV</Link></Button>}
       />
       {requestedResumeId ? (
@@ -256,19 +272,33 @@ export function ResumeAnalysis() {
               <span className="grid h-11 w-11 shrink-0 place-items-center border border-hairline bg-surface-soft text-primary"><FileText className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <p className="text-[16px] font-bold">{displayName}</p>
-                <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">The server has not returned an analysis for this version yet.</p>
+                <p className="mt-2 text-[14px] leading-[1.55] font-light text-muted">No analysis has been created for this version yet.</p>
               </div>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Button onClick={requestAnalysis} disabled={runRequested}>{runRequested ? 'Requesting…' : 'Request analysis'}</Button>
+              <Button onClick={requestAnalysis} disabled={runRequested}>{runRequested ? 'Analyzing…' : runFailure ? 'Try again' : 'Analyze this CV'}</Button>
               <Button variant="outline" asChild><Link to="/upload">Upload another version</Link></Button>
             </div>
           </Card>
-          <Alert>
-            <Sparkles className="h-4 w-4" />
-            <AlertTitle>What happens next?</AlertTitle>
-            <AlertDescription>Document processing and analysis are server-side steps. This page will not claim they are complete until the API returns the structured result.</AlertDescription>
-          </Alert>
+          {runFailure ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
+              <AlertTitle>The analysis service could not complete this run</AlertTitle>
+              <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  {runFailure.message}
+                  {runFailure.code ? ` (${runFailure.code})` : ''} Your CV is saved, so retrying is safe — this is an API or provider problem, not a problem with the document.
+                </span>
+                <Button variant="outline" size="sm" onClick={requestAnalysis} disabled={runRequested}>Retry</Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <Sparkles className="h-4 w-4" />
+              <AlertTitle>What happens next?</AlertTitle>
+              <AlertDescription>Analysis is a server-side step that runs when you ask for it — nothing happens in the background. The API reads the extracted text and returns the structured result, which can take up to a minute.</AlertDescription>
+            </Alert>
+          )}
         </div>
       ) : (
         <EmptyState icon={FileText} title="No analysis to show" description="Your saved analyses will appear here once the API returns a structured result." action={<Button asChild><Link to="/upload">Upload your first CV</Link></Button>} />

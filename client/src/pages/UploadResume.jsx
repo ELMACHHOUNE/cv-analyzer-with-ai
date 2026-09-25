@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, FileText, History, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, FileText, History, LoaderCircle, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { EmptyState } from '@/components/EmptyState'
@@ -35,6 +35,8 @@ export function UploadResume() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [renaming, setRenaming] = useState(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [pendingResumeId, setPendingResumeId] = useState('')
 
   const loadResumes = async () => {
     setLoading(true)
@@ -55,11 +57,34 @@ export function UploadResume() {
   const handleComplete = async (resume) => {
     const normalized = normalizeResume(resume)
     const resumeId = normalized?.id
-    toast.success('CV uploaded. Opening your analysis workspace.')
     setVersionName('')
     await loadResumes()
-    if (resumeId) navigate(`/analysis?resumeId=${encodeURIComponent(resumeId)}`)
-    else navigate('/analysis')
+    if (!resumeId) {
+      toast.error('The CV was uploaded, but the API did not return an id for it.')
+      navigate('/analysis')
+      return
+    }
+    /* Analysis is a synchronous API call, not a background job — run it now
+       so the user lands on a real review instead of an empty workspace. */
+    setPendingResumeId(resumeId)
+    setAnalyzing(true)
+    try {
+      const created = await analysisApi.create(resumeId)
+      const createdId = created?._id || created?.id
+      if (createdId) {
+        toast.success('Analysis is ready.')
+        navigate(`/analysis/${encodeURIComponent(createdId)}`, { replace: true })
+        return
+      }
+      navigate(`/analysis?resumeId=${encodeURIComponent(resumeId)}`, { replace: true })
+    } catch (analysisError) {
+      const message = getErrorMessage(analysisError, 'The CV is saved, but the analysis could not be started.')
+      toast.error(message)
+      navigate(`/analysis?resumeId=${encodeURIComponent(resumeId)}`, {
+        replace: true,
+        state: { runFailure: { message, code: analysisError?.code || '' } }
+      })
+    }
   }
 
   const deleteResume = async () => {
@@ -116,7 +141,29 @@ export function UploadResume() {
               <p id="version-name-hint" className="mt-2 text-[13px] font-light text-muted">Up to {MAX_RESUME_NAME_LENGTH} characters. Leave it empty to use the file name.</p>
             </div>
           </div>
-          <ResumeUploader versionName={versionName} onComplete={handleComplete} onReset={() => setVersionName('')} />
+            {analyzing ? (
+              <div className="border border-hairline bg-surface-soft p-6" aria-live="polite">
+                <p className="label-uppercase text-primary">Analyzing your CV</p>
+                <p className="mt-4 flex items-center gap-3 text-[18px] leading-[1.3] font-bold">
+                  <LoaderCircle className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+                  Reading the document
+                </p>
+                <p className="mt-3 text-[14px] leading-[1.55] font-light text-muted">
+                  The API returns the structured review for this version. It runs
+                  once, on demand, and can take up to a minute — this page will
+                  open the result as soon as it arrives.
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-6"
+                  onClick={() => navigate(`/analysis?resumeId=${encodeURIComponent(pendingResumeId)}`)}
+                >
+                  Open the workspace instead
+                </Button>
+              </div>
+            ) : (
+              <ResumeUploader versionName={versionName} onComplete={handleComplete} onReset={() => setVersionName('')} />
+            )}
         </Card>
         <div>
           <div className="mb-5 flex items-end justify-between gap-3">

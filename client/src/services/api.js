@@ -42,10 +42,16 @@ function normalizeErrorDetails(payload) {
   return null
 }
 
-function createApiError(message, status = 500, details = null) {
+function asErrorCode(value) {
+  const code = typeof value === 'string' ? value.trim() : ''
+  return /^[A-Z0-9_]{2,40}$/.test(code) ? code : ''
+}
+
+function createApiError(message, status = 500, details = null, code = '') {
   const error = new Error(message || 'The request could not be completed.')
   error.status = status
   error.details = details
+  error.code = code
   return error
 }
 
@@ -60,7 +66,7 @@ api.interceptors.response.use(
     const payload = response.data
     if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'success')) {
       if (!payload.success) {
-        return Promise.reject(createApiError(payload.message || 'The request failed.', response.status, normalizeErrorDetails(payload)))
+        return Promise.reject(createApiError(payload.message || 'The request failed.', response.status, normalizeErrorDetails(payload), asErrorCode(payload.code)))
       }
       return Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload
     }
@@ -74,7 +80,7 @@ api.interceptors.response.use(
     }
     const payload = error?.response?.data
     const message = payload?.message || payload?.error || error?.message || (status === 0 ? 'Unable to reach the server. Check your connection and try again.' : 'The request could not be completed.')
-    return Promise.reject(createApiError(message, status, normalizeErrorDetails(payload)))
+    return Promise.reject(createApiError(message, status, normalizeErrorDetails(payload), asErrorCode(payload?.code)))
   },
 )
 

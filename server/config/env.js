@@ -110,11 +110,15 @@ export function getAiConfig() {
   if (!Number.isInteger(timeout) || timeout < 1000 || timeout > 120000) {
     throw new Error('XAI_TIMEOUT_MS must be an integer between 1000 and 120000');
   }
+  const endpoint = process.env.XAI_ENDPOINT?.trim() || 'https://api.x.ai/v1/responses';
+  if (!/^https:\/\/[a-z0-9.-]+(?:\/[a-z0-9/_-]*)?$/i.test(endpoint)) {
+    throw new Error('XAI_ENDPOINT must be an https URL');
+  }
   return Object.freeze({
     apiKey: process.env.XAI_API_KEY?.trim() || null,
     model: process.env.XAI_MODEL?.trim() || 'grok-4.6',
     timeoutMs: timeout,
-    endpoint: 'https://api.x.ai/v1/responses'
+    endpoint
   });
 }
 

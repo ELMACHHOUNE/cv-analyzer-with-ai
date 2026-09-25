@@ -33,6 +33,23 @@ function configured(overrides = {}) {
   return { ...testConfig, apiKey: 'test-placeholder', ...overrides };
 }
 
+function failureResponse(status, body) {
+  return {
+    ok: false,
+    status,
+    text: vi.fn().mockResolvedValue(JSON.stringify(body))
+  };
+}
+
+function runAgainst(failure) {
+  return requestXaiJson({
+    systemPrompt: 'Return JSON only.',
+    userPrompt: 'Return an object.',
+    schemaName: 'unit_test',
+    schema: { type: 'object' }
+  }, { config: configured(), fetchImpl: vi.fn().mockResolvedValue(failure) });
+}
+
 describe('AI service safety', () => {
   it('fails safely without making a request when the key is missing', async () => {
     const fetchImpl = vi.fn();
@@ -43,8 +60,21 @@ describe('AI service safety', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it('rejects malformed model JSON', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(outputPayload('{malformed')));
+  it('reports an exhausted provider credit balance instead of a bare 502', async () => {
+    await expect(runAgainst(failureResponse(403, {
+      code: 'permission-denied',
+      error: 'Your team has either used all available credits or reached its monthly spending limit.'
+    }))).rejects.toMatchObject({ statusCode: 502, code: 'AI_CREDITS_EXHAUSTED' });
+  });
+
+  it('separates a rejected key, an unknown model, and a rate limit', async () => {
+    await expect(runAgainst(failureResponse(401, { code: 'unauthenticated' }))).rejects.toMatchObject({ code: 'AI_ACCESS_DENIED' });
+    await expect(runAgainst(failureResponse(404, { code: 'model_not_found' }))).rejects.toMatchObject({ code: 'AI_MODEL_NOT_FOUND' });
+    await expect(runAgainst(failureResponse(429, { code: 'rate_limit' }))).rejects.toMatchObject({ statusCode: 503, code: 'AI_RATE_LIMITED' });
+    await expect(runAgainst(failureResponse(503, { code: 'server_error' }))).rejects.toMatchObject({ statusCode: 502, code: 'AI_UNAVAILABLE' });
+  });
+
+  it('rejects malformed model JSON', async () => {    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(outputPayload('{malformed')));
     await expect(requestXaiJson({
       systemPrompt: 'Return JSON only.',
       userPrompt: 'Return an object.',
@@ -76,9 +106,10 @@ describe('AI service safety', () => {
     expect(body.store).toBe(false);
     expect(body.max_output_tokens).toBe(6000);
     expect(body.text.format.type).toBe('json_schema');
-    expect(body.text.format.json_schema.name).toBe('unit_test');
-    expect(body.text.format.json_schema.strict).toBe(false);
-    expect(body.text.format.json_schema.schema).toEqual({ type: 'object', properties: { ok: { type: 'boolean' } } });
+    expect(body.text.format.name).toBe('unit_test');
+    expect(body.text.format.strict).toBe(false);
+    expect(body.text.format.schema).toEqual({ type: 'object', properties: { ok: { type: 'boolean' } } });
+    expect(body.text.format.json_schema).toBeUndefined();
     expect(body.messages).toBeUndefined();
     expect(body.response_format).toBeUndefined();
     expect(body.temperature).toBeUndefined();
@@ -200,8 +231,8 @@ describe('AI service safety', () => {
 
     const result = await analyzeResume(source, { config: configured(), fetchImpl });
     const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
-    expect(body.text.format.json_schema.name).toBe('resume_analysis');
-    expect(body.text.format.json_schema.schema.properties.information.properties.technicalSkills)
+    expect(body.text.format.name).toBe('resume_analysis');
+    expect(body.text.format.schema.properties.information.properties.technicalSkills)
       .toEqual({ type: 'array', items: { type: 'string' } });
     expect(result.information.technicalSkills).toEqual(['Node.js']);
     expect(result.information.softSkills).toEqual(['Leadership']);

@@ -180,30 +180,29 @@ export function Landing() {
     <div className="min-h-screen bg-canvas">
       <Navbar />
 
-      {/* 01 · hero-band-dark */}
-      <Section tone="dark" size="xl" className="relative overflow-hidden">
+      {/* 01 · hero-band-dark — {spacing.section} rhythm, type {colors.on-dark}, one blue CTA */}
+      <Section tone="dark" className="min-h-screen relative overflow-hidden">
         <DarkGrid />
-        <SectionInner className="relative grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20">
+        <SectionInner className="relative grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16">
           <div>
             <Eyebrow tone="soft" className="mb-6">
               Career intelligence, without the guesswork
             </Eyebrow>
-            <h1 className="max-w-3xl text-[44px] leading-[1.05] font-bold text-balance text-on-dark sm:text-[56px] lg:text-[64px]">
-              Understand your CV.{" "}
-              <span className="text-primary-on-dark">Match your career.</span>
+            <h1 className="max-w-3xl text-balance text-[44px] leading-[1.05] font-bold text-on-dark sm:text-[56px] lg:text-[64px]">
+              Understand your CV. Match your career.
             </h1>
             <p className="mt-7 max-w-2xl text-[18px] leading-[1.55] font-light text-on-dark-soft">
               CV analysis and job compatibility in one workspace. See what is
               strong, what is missing, and what to improve next.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" asChild>
+              <Button asChild>
                 <Link to="/register">
                   Analyze my CV{" "}
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button size="lg" variant="onDark" asChild>
+              <Button variant="onDark" asChild>
                 <Link to="/jobs">
                   Try the job matcher{" "}
                   <BriefcaseBusiness className="h-4 w-4" aria-hidden="true" />
@@ -212,22 +211,33 @@ export function Landing() {
             </div>
           </div>
 
-          <dl className="grid gap-px border border-on-dark/15 bg-on-dark/15 sm:grid-cols-2">
-            {proofPoints.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="bg-surface-dark p-6">
-                <Icon
-                  className="h-5 w-5 text-primary-on-dark"
-                  aria-hidden="true"
-                />
-                <dt className="mt-5 text-[16px] font-bold text-on-dark">
-                  {title}
-                </dt>
-                <dd className="mt-2 text-[14px] leading-[1.55] font-light text-on-dark-soft">
-                  {text}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          {/* the render slot: one flat nested plate, never a grid of cards */}
+          <div className="border border-on-dark/25 bg-surface-dark-elevated p-7 sm:p-8">
+            <p className="label-uppercase text-on-dark-soft">
+              Built to be interrogated
+            </p>
+            <dl className="mt-7 divide-y divide-on-dark/15">
+              {proofPoints.map(({ icon: Icon, title, text }) => (
+                <div
+                  key={title}
+                  className="grid gap-3 py-5 first:pt-0 last:pb-0 sm:grid-cols-[24px_1fr] sm:gap-5"
+                >
+                  <Icon
+                    className="h-5 w-5 text-on-dark"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <dt className="text-[16px] font-bold text-on-dark">
+                      {title}
+                    </dt>
+                    <dd className="mt-2 text-[14px] leading-[1.55] font-light text-on-dark-soft">
+                      {text}
+                    </dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </div>
         </SectionInner>
       </Section>
 
@@ -360,13 +370,13 @@ export function Landing() {
             description="Upload a version, see the signals, and decide what to fix before the next application."
           />
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-            <Button size="lg" asChild>
+            <Button asChild>
               <Link to="/register">
                 Create your workspace{" "}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button variant="outline" asChild>
               <Link to="/login">Sign in</Link>
             </Button>
           </div>

@@ -330,6 +330,62 @@ function trimForPrompt(value, maximum = 24000) {
   return `${text.slice(0, maximum - tailLength)}\n[TRIMMED]\n${text.slice(-tailLength)}`;
 }
 
+/*
+  Upstream provider failures are the single most common cause of a failed
+  analysis, and a bare 502 hides the reason. Read the provider body once, log
+  it, and translate it into a code the API and the UI can act on.
+*/
+async function readProviderFailure(response) {
+  const failure = { upstreamStatus: response.status };
+  try {
+    const raw = await response.text();
+    if (!raw) return failure;
+    try {
+      const parsed = JSON.parse(raw);
+      const code = String(parsed?.code || parsed?.error?.code || '').trim().slice(0, 80);
+      const message = String(parsed?.error?.message || parsed?.error || parsed?.message || '').trim().slice(0, 300);
+      if (code) failure.upstreamCode = code;
+      if (message) failure.upstreamMessage = message;
+    } catch {
+      failure.upstreamMessage = raw.trim().slice(0, 300);
+    }
+  } catch {
+    /* body already consumed or unreadable — the status alone is enough */
+  }
+  return failure;
+}
+
+function providerError(response, failure, model) {
+  const status = response.status;
+  const upstream = String(failure.upstreamCode || '').toLowerCase();
+  const creditsExhausted = status === 403 && (upstream.includes('permission') || upstream.includes('credit') || upstream.includes('quota'));
+  if (creditsExhausted) {
+    return new AppError(
+      'The AI provider rejected the request: the account has no credits left or has reached its spending limit',
+      502,
+      'AI_CREDITS_EXHAUSTED'
+    );
+  }
+  if (status === 401 || status === 403) {
+    return new AppError('The AI provider rejected the configured API key', 502, 'AI_ACCESS_DENIED');
+  }
+  if (status === 404) {
+    return new AppError(`The configured AI model "${model}" was not found by the provider`, 502, 'AI_MODEL_NOT_FOUND');
+  }
+  if (status === 429) {
+    return new AppError('The AI provider rate limit was reached. Try again in a moment.', 503, 'AI_RATE_LIMITED');
+  }
+  return new AppError('AI analysis is temporarily unavailable', 502, 'AI_UNAVAILABLE');
+}
+
+function logProviderFailure(model, failure) {
+  console.error('AI provider request failed', {
+    model,
+    endpoint: 'https://api.x.ai/v1/responses',
+    ...failure
+  });
+}
+
 function parseJsonContent(content) {
   if (typeof content !== 'string' || !content.trim()) {
     throw new AppError('AI returned an empty response', 502, 'AI_INVALID_RESPONSE');
@@ -360,10 +416,15 @@ function buildRequestBody({ systemPrompt, userPrompt, schemaName, schema }, mode
     store: false
   };
   if (schemaName && schema) {
+    /* Responses API shape: name/schema/strict are direct children of `format`.
+       Nesting them under a `json_schema` object is the Chat Completions shape
+       and is rejected with 422 "text.format: missing field `schema`". */
     body.text = {
       format: {
         type: 'json_schema',
-        json_schema: { name: schemaName, strict: false, schema }
+        name: schemaName,
+        schema,
+        strict: false
       }
     };
   }
@@ -424,7 +485,9 @@ export async function requestXaiJson({ systemPrompt, userPrompt, schemaName, sch
       response = await send(fallbackBody);
     }
     if (!response.ok) {
-      throw new AppError('AI analysis is temporarily unavailable', 502, 'AI_UNAVAILABLE');
+      const failure = await readProviderFailure(response);
+      logProviderFailure(config.model, failure);
+      throw providerError(response, failure, config.model);
     }
     try {
       payload = await response.json();
@@ -438,6 +501,7 @@ export async function requestXaiJson({ systemPrompt, userPrompt, schemaName, sch
     if (error.name === 'AbortError') {
       throw new AppError('AI analysis timed out', 504, 'AI_TIMEOUT');
     }
+    logProviderFailure(config.model, { networkError: error?.name || 'Error', upstreamMessage: error?.message });
     throw new AppError('AI analysis is temporarily unavailable', 502, 'AI_UNAVAILABLE');
   } finally {
     clearTimeout(timeout);
